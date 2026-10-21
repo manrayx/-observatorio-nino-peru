@@ -54,7 +54,8 @@ def get_noaa():
   if not m:continue
   try:
    date=datetime.strptime(m.group(1),'%d%b%Y').date().isoformat()
-   nums=[float(x) for x in m.group(2).split()[:8]]
+   # Fixed-width columns: negative anomalies stick to the SST ("23.4-0.4"), so split() fails.
+   nums=[float(x) for x in re.findall(r'-?\d+\.\d+',m.group(2))[:8]]
    if len(nums)!=8:continue
    rows.append({'date':date,'nino12':nums[1],'nino34':nums[5],'sst12':nums[0],'sst34':nums[4]})
   except ValueError:continue
@@ -160,8 +161,8 @@ class Handler(SimpleHTTPRequestHandler):
    region=urllib.parse.parse_qs(path.query).get('region',['lima'])[0]
    if region not in REGIONS:return self.send_json({'error':'Región no admitida'},400)
    return self.send_json(cached('forecast:'+region,lambda:get_forecast(region),TTL['forecast']))
-  if p=='/api/health':return self.send_json({'status':'ok','version':'1.4','server_time':datetime.now(timezone.utc).isoformat()})
+  if p=='/api/health':return self.send_json({'status':'ok','version':'1.5','server_time':datetime.now(timezone.utc).isoformat()})
   return super().do_GET()
 if __name__=='__main__':
- port=int(os.environ.get('PORT',8080));print('Observatorio 1.4 en puerto',port,flush=True)
+ port=int(os.environ.get('PORT',8080));print('Observatorio 1.5 en puerto',port,flush=True)
  ThreadingHTTPServer(('0.0.0.0',port),Handler).serve_forever()
