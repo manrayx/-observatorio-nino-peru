@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-VERSION = '1.6'
+VERSION = '1.7'
 BASE = Path(__file__).resolve().parent
 
 URLS = {
@@ -100,7 +100,7 @@ def get_noaa():
     if not rows:
         raise ValueError('NOAA respondió pero no se reconocieron datos semanales')
     rows.sort(key=lambda x: x['date'])
-    return {'series': rows[-52:], 'latest': rows[-1], 'source_url': URLS['noaa']}
+    return {'series': rows[-52:], 'latest': rows[-1], 'all': rows, 'source_url': URLS['noaa']}
 
 
 def get_indeci_latest():
@@ -219,8 +219,11 @@ class Handler(SimpleHTTPRequestHandler):
         path = urllib.parse.urlsplit(self.path)
         p = path.path
         if p == '/api/status':
+            noaa = dict(cached('noaa', get_noaa, TTL['noaa']))
+            if noaa.get('data'):  # the full history is for MCP; the page only needs the last year
+                noaa['data'] = {k: v for k, v in noaa['data'].items() if k != 'all'}
             return self.send_json({'sources': {
-                'noaa': cached('noaa', get_noaa, TTL['noaa']),
+                'noaa': noaa,
                 'enfen': cached('enfen', get_enfen, TTL['enfen']),
                 'gdacs': cached('gdacs', get_gdacs, TTL['gdacs']),
                 'indeci': cached('indeci', get_indeci_latest, TTL['indeci']),
@@ -235,9 +238,32 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json(cached('forecast:' + region, lambda: get_forecast(region), TTL['forecast']))
         if p == '/api/health':
             return self.send_json({'status': 'ok', 'version': VERSION, 'server_time': datetime.now(timezone.utc).isoformat()})
-        if p in ('/app.py', '/render.yaml'):
+        if p == '/mcp':
+            # 2026-07-28 removed the GET stream; older clients probing it get 405 too.
+            self.send_response(405); self.send_header('Allow', 'POST, OPTIONS'); self.send_header('Content-Length', '0'); self.end_headers()
+            return
+        if p in ('/app.py', '/render.yaml', '/mcp_server.py'):
             return self.send_error(404)
         return super().do_GET()
+
+
+    def do_POST(self):
+        if urllib.parse.urlsplit(self.path).path != '/mcp':
+            return self.send_error(404)
+        import mcp_server
+        mcp_server.handle_post(self)
+
+    def do_DELETE(self):
+        if urllib.parse.urlsplit(self.path).path == '/mcp':
+            self.send_response(405); self.send_header('Allow', 'POST, OPTIONS'); self.send_header('Content-Length', '0'); self.end_headers()
+            return
+        self.send_error(404)
+
+    def do_OPTIONS(self):
+        if urllib.parse.urlsplit(self.path).path != '/mcp':
+            return self.send_error(404)
+        import mcp_server
+        mcp_server.handle_options(self)
 
 
 if __name__ == '__main__':
