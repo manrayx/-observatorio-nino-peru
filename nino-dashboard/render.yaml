@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: observatorio-nino-peru
-    runtime: python
-    buildCommand: echo ready
-    startCommand: python app.py
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.7
