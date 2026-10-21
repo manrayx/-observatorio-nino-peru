@@ -34,7 +34,7 @@ details p{margin:8px 0}
 .scale{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;margin-top:6px}
 .scale span:nth-child(odd){font-variant-numeric:tabular-nums;color:var(--sub)}
 .map{height:calc(100vh - 330px);min-height:480px;border-radius:4px;background:#1c3547}
-.legend-bar{height:9px;border-radius:5px;margin-top:6px;background:linear-gradient(90deg,#6b00db,#0094ff,#88ff84,#cacab7,#ffb601,#f90113,#800000)}
+.legend-bar{height:10px;border-radius:5px;margin-top:6px;background:linear-gradient(90deg,#6b00db 0%,#0094ff 16.7%,#18fce5 25%,#88ff84 33.3%,#bff4a3 41.7%,#cacab7 50%,#fff679 58.3%,#ffb601 66.7%,#ff7100 75%,#f90113 83.3%,#d30085 91.7%,#800000 100%)}
 .legend-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--sub)}
 .legend{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:10px}
 .keys{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:11.5px;color:var(--sub);margin-top:6px}
@@ -129,7 +129,7 @@ details p{margin:8px 0}
   <div class="legend">
     <div><div class="meta" style="margin:0">Mar frente a lo normal (satélite, imagen más reciente)</div>
       <div class="legend-bar"></div>
-      <div class="legend-labels"><span>−3 °C</span><span>normal</span><span>+3 °C</span></div></div>
+      <div class="legend-labels"><span>−3</span><span>−2</span><span>−1</span><span>0 normal</span><span>+1</span><span>+2</span><span>+3 °C o más</span></div></div>
     <div class="keys">
       <span><span class="dot" style="background:#8fb3cc"></span>&lt;1 mm</span>
       <span><span class="dot" style="background:#4fb3ff"></span>1–10 mm</span>
@@ -206,14 +206,18 @@ function setIndex(key, v, date, fn){
 
 // ---------- Map ----------
 const map = L.map('map', {scrollWheelZoom: false}).setView([-9, -81], window.innerWidth < 600 ? 4 : 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  maxZoom: 12, subdomains: 'abcd',
-  attribution: '© OpenStreetMap · © CARTO'
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 16, attribution: 'Mapa base © Esri, HERE, Garmin, © OpenStreetMap'
+}).addTo(map);
+// City/country names drawn above the sea-temperature layer
+map.createPane('labels'); map.getPane('labels').style.zIndex = 350; map.getPane('labels').style.pointerEvents = 'none';
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 16, pane: 'labels'
 }).addTo(map);
 // Satellite SST anomaly: NASA GIBS WMS, no TIME parameter = most recent available day.
 const sstLayer = L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', {
   layers: 'GHRSST_L4_MUR_Sea_Surface_Temperature_Anomalies', format: 'image/png',
-  transparent: true, opacity: 0.8, maxNativeZoom: 7, attribution: 'NASA GIBS · MUR SST'
+  transparent: true, opacity: 0.85, maxNativeZoom: 7, attribution: 'NASA GIBS · MUR SST'
 }).addTo(map);
 let sstErrors = 0, sstLoaded = 0;
 sstLayer.on('tileerror', () => { sstErrors++; mapStatus(); });
