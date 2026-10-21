@@ -1,4 +1,4 @@
-# Observatorio El Niño Perú — versión 1.7
+# Observatorio El Niño Perú — versión 1.8
 
 Dashboard de seguimiento de El Niño para el Perú: temperatura del mar, lluvias esperadas, emergencias y comunicados oficiales.
 
@@ -14,7 +14,7 @@ Dashboard de seguimiento de El Niño para el Perú: temperatura del mar, lluvias
 | Noticias | Google News RSS | Titulares enlazados a la fuente original. |
 
 ## Publicación
-Los archivos `app.py`, `mcp_server.py`, `index.html`, `README.md` y `render.yaml` van en la **raíz** del repositorio (Render ejecuta la raíz salvo que se configure *Root Directory*). Luego, en Render: *Manual Deploy → Deploy latest commit*. Comprobar en `/api/health` que la versión sea 1.7.
+Los archivos `app.py`, `mcp_server.py`, `index.html`, `README.md` y `render.yaml` van en la **raíz** del repositorio (Render ejecuta la raíz salvo que se configure *Root Directory*). Luego, en Render: *Manual Deploy → Deploy latest commit*. Comprobar en `/api/health` que la versión sea 1.8.
 
 ## Endpoints
 `/api/status` (NOAA, ENFEN, GDACS, INDECI, noticias) · `/api/rain-map` · `/api/forecast?region=lima` · `/api/health`

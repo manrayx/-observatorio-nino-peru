@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-VERSION = '1.7.2'
+VERSION = '1.8'
 BASE = Path(__file__).resolve().parent
 
 URLS = {
@@ -101,7 +101,43 @@ def get_noaa():
     if not rows:
         raise ValueError('NOAA respondió pero no se reconocieron datos semanales')
     rows.sort(key=lambda x: x['date'])
-    return {'series': rows[-52:], 'latest': rows[-1], 'all': rows, 'source_url': URLS['noaa']}
+    return {'series': rows[-52:], 'latest': rows[-1], 'all': rows, 'insights': noaa_insights(rows), 'source_url': URLS['noaa']}
+
+
+def class12(v):
+    # ICEN scale used by ENFEN (applied here to the weekly value, as a reference)
+    if v > 3.0: return 'extraordinario'
+    if v > 1.7: return 'fuerte'
+    if v > 1.0: return 'moderado'
+    if v > 0.4: return 'débil'
+    if v >= -1.0: return 'normal'
+    return 'frío'
+
+
+def noaa_insights(rows):
+    """Facts the page uses to write its headline: streaks, changes and records (Niño 1+2)."""
+    v = [r['nino12'] for r in rows]
+    cur, cat = v[-1], class12(v[-1])
+    streak = 0
+    for x in reversed(v):
+        if class12(x) != cat:
+            break
+        streak += 1
+    # Most recent earlier week that was at least as warm (None = warmest of the whole series).
+    higher_since = None
+    for r in reversed(rows[:-1]):
+        if r['nino12'] >= cur:
+            higher_since = r['date']
+            break
+    return {
+        'categoria': cat, 'racha_semanas': streak,
+        'categoria_anterior': class12(v[-2]) if len(v) > 1 else cat,
+        'cambio_1_semana': round(cur - v[-2], 2) if len(v) > 1 else 0,
+        'cambio_4_semanas': round(cur - v[-5], 2) if len(v) > 4 else 0,
+        'igual_o_mayor_desde': higher_since,          # None = highest of the whole series
+        'serie_desde': rows[0]['date'],
+        'nino34': rows[-1]['nino34'],
+    }
 
 
 def get_indeci_latest():

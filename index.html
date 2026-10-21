@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Observatorio El Niño | Grupo Evidencia · MNRY</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
 <style>
 :root{color-scheme:dark;--bg:#0b1522;--panel:#142235;--panel2:#18293f;--edge:#25394f;--text:#eef4fb;--sub:#9fb3c8;--accent:#5fd3e4;--warm:#ffb66c}
 *{box-sizing:border-box}
@@ -17,7 +19,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;fl
 .brand{color:var(--accent);font-size:10px;letter-spacing:2px;font-weight:800}
 h1{font-size:20px;margin:2px 0 0;line-height:1.2}
 .top-right{display:flex;align-items:center;gap:10px}
-.dash{padding:12px;display:grid;gap:12px;grid-template-columns:300px minmax(0,1fr) 360px;grid-template-areas:"k k k" "l m r" "n n n"}
+.dash{padding:12px;display:grid;gap:12px;grid-template-columns:300px minmax(0,1fr) 360px;grid-template-areas:"h h h" "k k k" "l m r" "n n n"}
+.hero{grid-area:h;padding:22px 8px 14px;max-width:980px}
+.kicker{color:#ff8a7a;font-size:12.5px;letter-spacing:2.2px;font-weight:800;text-transform:uppercase}
+.headline{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:clamp(30px,4.2vw,52px);line-height:1.08;margin:10px 0 12px;letter-spacing:-.5px}
+.headline em{font-style:normal;color:#ff6b5b}
+.deck{font-size:clamp(16px,1.5vw,19px);line-height:1.55;color:#d3dfeb;margin:0;max-width:820px}
+.deck b{color:#fff}
+.byline{font-size:12px;color:var(--sub);margin-top:12px}
+.hero-skeleton{opacity:.45}
 .kpis{grid-area:k;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .left{grid-area:l}.center{grid-area:m}.right{grid-area:r}.newsrow{grid-area:n}
 .col{display:grid;gap:12px;align-content:start;min-width:0}
@@ -57,8 +67,8 @@ details p{margin:8px 0}
 .leaflet-popup-content{color:#172335}
 .leaflet-container a{color:#067da0}
 .leaflet-control-layers{font-size:12.5px}
-@media(max-width:1200px){.dash{grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"k k" "m r" "l r" "n n"}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:820px){.dash{grid-template-columns:minmax(0,1fr);grid-template-areas:"k" "m" "r" "l" "n"}.map{height:420px;min-height:0}.newsgrid{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
+@media(max-width:1200px){.dash{grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"h h" "k k" "m r" "l r" "n n"}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:820px){.dash{grid-template-columns:minmax(0,1fr);grid-template-areas:"h" "k" "m" "r" "l" "n"}.map{height:420px;min-height:0}.newsgrid{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
 @media(max-width:480px){.kpis{grid-template-columns:1fr}.forecast{grid-template-columns:repeat(4,1fr)}.value{font-size:34px}}
 </style>
 </head>
@@ -68,6 +78,12 @@ details p{margin:8px 0}
   <div class="top-right"><span class="meta" id="updated" style="margin:0">Cargando fuentes…</span><button id="refresh">Actualizar</button></div>
 </header>
 <main class="dash">
+<section class="hero hero-skeleton" id="hero" aria-live="polite">
+  <div class="kicker" id="kicker">Observatorio El Niño · Perú</div>
+  <h2 class="headline" id="headline">Leyendo los datos de la semana…</h2>
+  <p class="deck" id="deck"></p>
+  <div class="byline" id="byline"></div>
+</section>
 
 <section class="kpis">
   <article class="card kpi" id="k12">
@@ -256,6 +272,7 @@ async function loadRain(){
       cityMarkers[c.id] = m;
     }
     rainState = `Lluvia: ${cities.length} ciudades`;
+    window.rainCities = cities; buildHero();
   } catch(e){ rainState = 'Lluvia: no disponible'; }
   mapStatus();
 }
@@ -278,6 +295,102 @@ function drawEvents(){
 }
 
 // ---------- Chart ----------
+
+// ---------- Automatic headline: picks the strongest story in this week's data ----------
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const longDate = iso => { const [y,m,d] = iso.split('-').map(Number); return `${d} de ${MESES[m-1]}`; };
+const num = (v, d=1) => Math.abs(v).toFixed(d).replace(/\.0$/, '').replace('.', ',');
+const signed = v => (v >= 0 ? '+' : '−') + num(v) + ' °C';
+const ORD = ['','primera','segunda','tercera','cuarta','quinta','sexta','séptima','octava','novena','décima'];
+const nth = n => n < ORD.length ? ORD[n] : `${n}.ª`;
+const CAT_LABEL = {'extraordinario':'extraordinario','fuerte':'cálido fuerte','moderado':'cálido moderado','débil':'cálido débil','normal':'normal','frío':'frío'};
+const CAT_RANK = {'frío':0,'normal':1,'débil':2,'moderado':3,'fuerte':4,'extraordinario':5};
+function pick(options, seed){ // same choice all week, different choice next week
+  let h = 0; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return options[h % options.length];
+}
+function heroStory(n, ins){
+  const v = n.nino12, cat = ins.categoria, lab = CAT_LABEL[cat], warm = v > 0.4, cold = cat === 'frío';
+  const sinceYear = ins.igual_o_mayor_desde ? Number(ins.igual_o_mayor_desde.slice(0,4)) : null;
+  const thisYear = Number(n.date.slice(0,4));
+  const val = `<em>${signed(v)}</em>`;
+  // 1. Record or multi-year high
+  if (warm && sinceYear === null) {
+    const years = thisYear - Number(ins.serie_desde.slice(0,4));
+    return [`Récord: el mar frente al Perú, el más caliente en ${years} años de registros`,
+            `${val}: el valor más alto desde que hay registros semanales (${ins.serie_desde.slice(0,4)})`,
+            `Nunca se había medido el mar peruano tan caliente: ${val}`];
+  }
+  if (warm && thisYear - sinceYear >= 3) {
+    const since = sinceYear;
+    return [`El mar frente al Perú, en su punto más caliente desde ${since}`,
+            `${val}: el mar peruano no estaba tan caliente desde ${since}`,
+            `Nivel no visto desde ${since}: el mar está ${val} sobre lo normal`];
+  }
+  // 2. Category change this week
+  if (ins.categoria_anterior !== cat) {
+    const up = CAT_RANK[cat] > CAT_RANK[ins.categoria_anterior];
+    if (cat === 'normal') return [`El mar frente al Perú vuelve a la normalidad`, `Fin de la anomalía: el mar regresa a valores normales`];
+    return up ? [`El mar sube de nivel: ahora es ${lab}`, `Salto esta semana: el mar pasa a nivel ${lab}`, `El calentamiento escala a nivel ${lab}`]
+              : [`El mar baja a nivel ${lab}, pero sigue ${warm ? 'caliente' : 'frío'}`, `Primer respiro: el mar desciende a nivel ${lab}`];
+  }
+  // 3. Long streak at a non-normal level
+  if (cat !== 'normal' && ins.racha_semanas >= 3) {
+    return [`${nth(ins.racha_semanas)[0].toUpperCase() + nth(ins.racha_semanas).slice(1)} semana seguida de mar ${lab} frente al Perú`,
+            `${ins.racha_semanas} semanas en nivel ${lab}: el mar no da tregua`,
+            `El mar suma ${ins.racha_semanas} semanas en nivel ${lab}`];
+  }
+  // 4. Strong trend over a month
+  if (Math.abs(ins.cambio_4_semanas) >= 0.5) {
+    return ins.cambio_4_semanas > 0
+      ? [`El mar sigue calentándose: ${num(ins.cambio_4_semanas)} °C más que hace un mes`, `Cuatro semanas al alza: el mar ya está ${val} sobre lo normal`]
+      : [`El mar empieza a enfriarse: ${num(ins.cambio_4_semanas)} °C menos que hace un mes`, `Señal de alivio: el mar baja ${num(ins.cambio_4_semanas)} °C en un mes`];
+  }
+  // 5. Stable
+  if (cat === 'normal') return [`El mar frente al Perú se mantiene dentro de lo normal`, `Semana tranquila en el mar peruano`];
+  return [`El mar se mantiene ${val} ${cold ? 'bajo' : 'sobre'} lo normal`, `Sin cambios de fondo: el mar sigue en nivel ${lab}`];
+}
+function heroDeck(n, ins, seed){
+  const parts = [];
+  const lab = CAT_LABEL[ins.categoria];
+  const d4 = ins.cambio_4_semanas, trend = d4 > 0.2 ? 'y sigue subiendo' : d4 < -0.2 ? 'aunque viene bajando' : 'y se mantiene estable';
+  if (ins.categoria === 'normal') parts.push(pick([
+    `La temperatura del mar en la costa norte está dentro de lo normal (${signed(n.nino12)} frente al promedio) ${trend}.`,
+    `Frente a Tumbes y Piura el mar no muestra anomalías importantes (${signed(n.nino12)}).`], seed + 'a'));
+  else parts.push(pick([
+    `La costa norte está <b>${signed(n.nino12)}</b> ${n.nino12 < 0 ? 'bajo' : 'sobre'} lo normal, nivel ${lab}, ${trend}.`,
+    `Frente a Tumbes y Piura el mar marca <b>${signed(n.nino12)}</b> ${n.nino12 < 0 ? 'bajo' : 'sobre'} lo normal (${lab}) ${trend}.`,
+    `El indicador costero llega a <b>${signed(n.nino12)}</b>, nivel ${lab}, ${trend}.`], seed + 'a'));
+  if (Math.abs(n.nino34) >= 0.5) parts.push(pick([
+    `En el Pacífico central la anomalía es de ${signed(n.nino34)}, señal de un evento que va más allá de la costa.`,
+    `El Pacífico central también está caliente (${signed(n.nino34)}).`], seed + 'b'));
+  const cities = (window.rainCities || []).slice().sort((a,b) => b.rain_3d - a.rain_3d);
+  if (cities.length) {
+    const top = cities[0];
+    parts.push(top.rain_3d >= 5
+      ? pick([`Para los próximos tres días, ${top.name} es la ciudad con más lluvia esperada (${num(top.rain_3d)} mm).`,
+              `${top.name} encabeza la lluvia pronosticada para los próximos tres días: ${num(top.rain_3d)} mm.`], seed + 'c')
+      : `Por ahora no se pronostican lluvias importantes en las ciudades monitoreadas.`);
+  }
+  const evs = dataset.gdacs?.data?.events || [];
+  if (evs.length) parts.push(pick([
+    `GDACS registra ${evs.length} ${evs.length === 1 ? 'emergencia' : 'emergencias'} en el país en los últimos 60 días.`,
+    `En los últimos 60 días se registraron ${evs.length} ${evs.length === 1 ? 'evento' : 'eventos'} de impacto relevante en el Perú.`], seed + 'd'));
+  return parts.slice(0, 3).join(' ');
+}
+function buildHero(){
+  const n = dataset.noaa?.data?.latest, ins = dataset.noaa?.data?.insights;
+  if (!n || !ins) return;
+  const seed = n.date;
+  const lab = CAT_LABEL[ins.categoria];
+  const kicker = ins.categoria === 'normal' ? 'Mar peruano' : ins.categoria === 'frío' ? 'Mar frío frente al Perú' : 'El Niño costero';
+  $('kicker').textContent = `${kicker} · semana del ${longDate(n.date)}`;
+  $('headline').innerHTML = pick(heroStory(n, ins), seed);
+  $('deck').innerHTML = heroDeck(n, ins, seed);
+  $('byline').textContent = 'Titular generado automáticamente con datos de NOAA, Open-Meteo y GDACS. Categoría referencial (escala ICEN de ENFEN aplicada al dato semanal).';
+  $('hero').classList.remove('hero-skeleton');
+}
+
 function plot(){
   const rows = dataset.noaa?.data?.series || [];
   const svg = $('trend');
@@ -344,6 +457,7 @@ async function load(){
       ? `INDECI (registro nacional de emergencias) publica su base de datos geográfica con retraso: su registro público más reciente es del ${fmtDate(ind)}. Por eso no se usa aquí para contar emergencias actuales.`
       : 'La base de datos pública de INDECI no respondió.';
     drawEvents();
+    buildHero();
 
     const names = {noaa:'NOAA · mar', enfen:'ENFEN', gdacs:'GDACS · desastres', indeci:'INDECI', news:'Noticias'};
     const h = $('health'); h.replaceChildren();
