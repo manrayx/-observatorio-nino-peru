@@ -26,3 +26,12 @@ Navegador (HTML, JS, Leaflet/OpenStreetMap) → backend HTTP Python → conector
 - No hay todavía pronóstico local, riesgo compuesto, avisos push, persistencia histórica ni alertas sobre infraestructura.
 - Fuentes externas pueden bloquear peticiones o cambiar formatos. El dashboard muestra el fallo, no datos fabricados.
 - Para producción: base PostgreSQL/Timescale, scheduler independiente, paginación y normalización por fecha, límites de solicitudes, validación de esquemas, observabilidad, pruebas, y permisos/CORS.
+
+
+## Versión 1.2: mapa oceánico NOAA
+- Muestra anomalías SST MUR de NOAA CoastWatch mediante WMS, centrado inicialmente en la costa del Perú y Pacífico oriental.
+- `/api/ocean-meta` lee GetCapabilities y descubre capa y fecha; `/api/ocean-map` obtiene imagen WMS de NOAA para la ventana cartográfica.
+- El mapa **no** constituye alerta ENFEN; la capa depende de disponibilidad externa. Si NOAA falla, aparece un mensaje, sin inventar datos.
+- Para actualizar GitHub/Render, reemplazar `app.py` e `index.html` en la carpeta `nino-dashboard/`.
+- Pruebas: `python -m py_compile app.py`, abrir `/api/ocean-meta`, verificar `ok: true`, abrir mapa y confirmar `capa cargada`.
+- Esta entrega se probó localmente en sintaxis y estructura; la red de ejecución no permitió comprobar solicitudes en vivo a NOAA.
