@@ -1,16 +1,20 @@
-# Observatorio El Niño Perú — versión correctiva 1.5
+# Observatorio El Niño Perú — versión 1.6
 
-## Correcciones
-- NOAA CPC: parser corregido para el formato REAL de `wksst9120.for` (fecha al inicio de cada fila; sin columna de año). Serie de 52 semanas, Niño 1+2 y Niño 3.4.
-- INDECI: consulta ArcGIS JSON con orden por fecha y filtrado local de los últimos 30 días. Los resultados son una muestra limitada a los 500 registros más recientes; nunca se interpretan como total nacional.
-- Mapa: se retira la falsa promesa de un raster satelital operativo. Se muestra la región Niño 1+2 auténtica (0–10°S, 90–80°O) con el valor semanal NOAA, más los puntos recientes INDECI si la fuente funciona. La región puede quedar fuera del encuadre de Lima; usa la vista Niño 1+2.
-- Si INDECI falla, se muestra “—”, nunca “0”.
+Dashboard de seguimiento de El Niño para el Perú: temperatura del mar, lluvias esperadas, emergencias y comunicados oficiales.
+
+## Qué muestra y de dónde sale
+| Panel | Fuente | Notas |
+|---|---|---|
+| Mar costa norte (Niño 1+2) y Pacífico central (Niño 3.4) | NOAA CPC, archivo semanal `wksst9120.for` | Anomalía frente al promedio 1991–2020. La etiqueta (normal, cálido débil…) usa la escala ICEN de ENFEN aplicada al dato semanal: es referencial. |
+| Comunicado ENFEN | Página de comunicados de ENFEN | Se enlaza el más reciente. |
+| Mapa · temperatura del mar | NASA GIBS (MUR SST, anomalía diaria) | Se carga directo en el navegador; imagen más reciente disponible (1–2 días de retraso). |
+| Mapa · lluvia 3 días y pronóstico 7 días | Open-Meteo | Pronóstico de modelo para 12 ciudades, no observación. |
+| Emergencias y desastres | GDACS (ONU / Comisión Europea) | Eventos de impacto relevante en Perú, últimos 60 días. No incluye cada emergencia local. |
+| Nota INDECI | Servicio ArcGIS público de INDECI | Su base pública se actualiza con meses de retraso (último registro: 12/05/2026 al 21/10/2026), por eso no se usa para contar emergencias actuales. Se muestra la fecha de su registro más reciente. |
+| Noticias | Google News RSS | Titulares enlazados a la fuente original. |
 
 ## Publicación
-Reemplazar `app.py`, `index.html` y opcionalmente `README.md` dentro de `nino-dashboard` en GitHub. Mantener `render.yaml`. Render redespliega automáticamente si está configurado para ello.
+Los archivos `app.py`, `index.html`, `README.md` y `render.yaml` van en la **raíz** del repositorio (Render ejecuta la raíz salvo que se configure *Root Directory*). Luego, en Render: *Manual Deploy → Deploy latest commit*. Comprobar en `/api/health` que la versión sea 1.6.
 
-## Limitaciones verificables
-No se ha confirmado desde Render la disponibilidad de los servicios externos. El mapa oceánico es un indicador regional NOAA, NO una imagen satelital. SENAMHI continúa como enlace al portal oficial, sin API automática. Los titulares RSS pueden fallar por bloqueos del proveedor. No usar el muestreo INDECI como estadística oficial.
-
-## Pruebas
-`python -m py_compile app.py`; `python app.py`; revisar `/api/status`, `/api/forecast?region=lima`, `/api/health`.
+## Endpoints
+`/api/status` (NOAA, ENFEN, GDACS, INDECI, noticias) · `/api/rain-map` · `/api/forecast?region=lima` · `/api/health`
