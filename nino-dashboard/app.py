@@ -45,40 +45,46 @@ def get_enfen():
  return {'items':out[:12],'source_url':URLS['enfen']}
 
 def get_noaa():
- raw,_=fetch(URLS['noaa']);lines=raw.decode('utf-8','replace').splitlines()
- # NOAA CPC weekly: year week then SST and anomaly for 1+2, 3, 3.4 and 4.
+ raw,_=fetch(URLS['noaa'],limit=2000000,timeout=18)
  rows=[]
- for line in lines:
-  parts=line.split()
-  if len(parts)<10:continue
+ for line in raw.decode('utf-8','replace').splitlines():
+  # NOAA CPC wksst9120.for: DATE SST12 ANOM12 SST3 ANOM3 SST34 ANOM34 SST4 ANOM4.
+  # Header may display a separate "Week" line; there is NO year column.
+  m=re.match(r'^\s*(\d{2}[A-Za-z]{3}\d{4})\s+(.+)$',line)
+  if not m:continue
   try:
-   year=int(parts[0]);date=parts[1];nums=[float(x) for x in parts[2:10]]
-   if not (1980<=year<=2100 and re.fullmatch(r'\d{1,2}[A-Za-z]{3}\d{4}',date)):continue
-   dt=datetime.strptime(date,'%d%b%Y').date().isoformat()
-   rows.append({'date':dt,'nino12':nums[1],'nino34':nums[5],'sst12':nums[0],'sst34':nums[4]})
-  except (ValueError,IndexError):continue
- if not rows:raise ValueError('Formato de la serie NOAA CPC no reconocido')
- rows.sort(key=lambda x:x['date']);return {'series':rows[-30:],'latest':rows[-1],'unit':'°C','period':'semanal','source_url':URLS['noaa']}
+   date=datetime.strptime(m.group(1),'%d%b%Y').date().isoformat()
+   nums=[float(x) for x in m.group(2).split()[:8]]
+   if len(nums)!=8:continue
+   rows.append({'date':date,'nino12':nums[1],'nino34':nums[5],'sst12':nums[0],'sst34':nums[4]})
+  except ValueError:continue
+ if not rows:raise ValueError('NOAA respondió pero no se reconocieron observaciones semanales')
+ rows.sort(key=lambda x:x['date'])
+ return {'series':rows[-52:],'latest':rows[-1],'unit':'°C','period':'semanal','source_url':URLS['noaa']}
 
 def get_indeci():
- # Server-side query: last 30 days based on SINPAD FECHA epoch ms, not first 100 historical rows.
- since=int((datetime.now(timezone.utc)-timedelta(days=30)).timestamp()*1000)
- where='FECHA >= '+str(since)
- params={'where':where,'outFields':'OBJECTID,FECHA,ANHO,MES,DEPARTAMENTO,PROVINCIA,DISTRITO,FENOMENO,IDE_SINPAD','returnGeometry':'true','outSR':'4326','orderByFields':'FECHA DESC','resultRecordCount':'200','f':'geojson'}
- url=URLS['indeci']+'?'+urllib.parse.urlencode(params)
- raw,_=fetch(url,limit=6000000,timeout=16);obj=json.loads(raw)
- if 'error' in obj:raise ValueError('ArcGIS: '+str(obj['error'].get('message','error')))
- if not isinstance(obj.get('features'),list):raise ValueError('GeoJSON no disponible')
- feats=[]
- for f in obj['features']:
-  p=f.get('properties') or {};date=p.get('FECHA')
+ # ArcGIS dates in SQL use TIMESTAMP, not milliseconds. Query recent records by order
+ # and apply a strict 30-day filter locally. An empty result is NOT a national zero.
+ base=URLS['indeci']
+ params={'where':'1=1','outFields':'OBJECTID,FECHA,ANHO,MES,DEPARTAMENTO,PROVINCIA,DISTRITO,FENOMENO,IDE_SINPAD','returnGeometry':'true','outSR':'4326','orderByFields':'FECHA DESC','resultRecordCount':'500','f':'json'}
+ raw,_=fetch(base+'?'+urllib.parse.urlencode(params),limit=7000000,timeout=20)
+ obj=json.loads(raw)
+ if obj.get('error'):raise ValueError('ArcGIS: '+str(obj['error'].get('message','error')))
+ records=obj.get('features')
+ if not isinstance(records,list):raise ValueError('Respuesta ArcGIS sin registros')
+ since=(datetime.now(timezone.utc)-timedelta(days=30)).timestamp()
+ features=[]
+ for f in records:
+  p=f.get('attributes') or {};val=p.get('FECHA')
   try:
-   stamp=float(date);stamp=stamp/1000 if stamp>1e11 else stamp
-   if stamp < since/1000:continue
+   stamp=float(val);stamp=stamp/1000 if stamp>1e11 else stamp
+   if stamp<since or stamp>time.time()+86400:continue
    p['fecha_iso']=datetime.fromtimestamp(stamp,timezone.utc).date().isoformat()
   except (TypeError,ValueError,OverflowError,OSError):continue
-  feats.append(f)
- return {'features':feats,'count_sample':len(feats),'sample_only':True,'period_days':30,'source_url':'https://portal.indeci.gob.pe/'}
+  g=f.get('geometry') or {};coords=[g.get('x'),g.get('y')]
+  if not all(isinstance(v,(float,int)) for v in coords):continue
+  features.append({'type':'Feature','geometry':{'type':'Point','coordinates':coords},'properties':p})
+ return {'features':features,'count_sample':len(features),'sample_only':True,'records_scanned':len(records),'period_days':30,'source_url':PUBLIC['indeci']}
 
 def get_news():
  # Headlines and publisher from an external RSS feed, never machine-invented summaries.
