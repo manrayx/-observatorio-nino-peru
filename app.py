@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-VERSION = '1.7'
+VERSION = '1.7.1'
 BASE = Path(__file__).resolve().parent
 
 URLS = {
@@ -47,7 +47,8 @@ def cached(key, loader, ttl):
     now = time.time()
     with LOCK:
         old = CACHE.get(key)
-        if old and now - old['checked_epoch'] < ttl:
+        # Failed lookups are retried after 5 minutes instead of waiting the full TTL
+        if old and now - old['checked_epoch'] < (ttl if old['status'] == 'ok' else min(ttl, 300)):
             return old
     stamp = datetime.now(timezone.utc).isoformat()
     try:
@@ -184,21 +185,33 @@ def get_forecast(region):
 
 
 def get_rain_map():
-    # One Open-Meteo call for every city: total rain forecast for the next 3 days.
+    # Total rain forecast for the next 3 days per city. One multi-location Open-Meteo call;
+    # if that fails, fall back to the per-city 7-day forecasts (cached and shared with the forecast panel).
     keys = list(REGIONS)
-    params = {'latitude': ','.join(str(REGIONS[k][1]) for k in keys),
-              'longitude': ','.join(str(REGIONS[k][2]) for k in keys),
-              'daily': 'precipitation_sum', 'timezone': 'America/Lima', 'forecast_days': 3}
-    data = json.loads(fetch(URLS['forecast'] + '?' + urllib.parse.urlencode(params)))
-    if isinstance(data, dict):
-        data = [data]
-    if len(data) != len(keys):
-        raise ValueError('Respuesta incompleta de Open-Meteo')
     out = []
-    for k, loc in zip(keys, data):
-        vals = [v for v in (loc.get('daily') or {}).get('precipitation_sum') or [] if isinstance(v, (int, float))]
+    try:
+        params = {'latitude': ','.join(str(REGIONS[k][1]) for k in keys),
+                  'longitude': ','.join(str(REGIONS[k][2]) for k in keys),
+                  'daily': 'precipitation_sum', 'timezone': 'America/Lima', 'forecast_days': 3}
+        data = json.loads(fetch(URLS['forecast'] + '?' + urllib.parse.urlencode(params)))
+        if isinstance(data, dict):
+            data = [data]
+        if len(data) != len(keys):
+            raise ValueError('Respuesta incompleta de Open-Meteo')
+        dailies = [(loc.get('daily') or {}).get('precipitation_sum') or [] for loc in data]
+    except Exception:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            res = list(ex.map(lambda k: cached('forecast:' + k, lambda: get_forecast(k), TTL['forecast']), keys))
+        dailies = [((r.get('data') or {}).get('daily') or {}).get('precipitation_sum', [])[:3] if r.get('data') else None for r in res]
+        if all(d is None for d in dailies):
+            raise ValueError('Open-Meteo no respondió')
+    for k, vals in zip(keys, dailies):
+        if vals is None:
+            continue
         name, lat, lon = REGIONS[k]
-        out.append({'id': k, 'name': name, 'lat': lat, 'lon': lon, 'rain_3d': round(sum(vals), 1)})
+        nums = [v for v in vals if isinstance(v, (int, float))]
+        out.append({'id': k, 'name': name, 'lat': lat, 'lon': lon, 'rain_3d': round(sum(nums), 1)})
     return {'cities': out, 'days': 3}
 
 
