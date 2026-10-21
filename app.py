@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-VERSION = '1.7.1'
+VERSION = '1.7.2'
 BASE = Path(__file__).resolve().parent
 
 URLS = {
@@ -228,6 +228,26 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
+    MCP_405 = ('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+               '<title>Servidor MCP · Observatorio El Niño · Perú</title>'
+               '<body style="font:16px/1.6 system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 18px;background:#0b1522;color:#eef4fb">'
+               '<h1 style="font-size:22px">Servidor MCP del Observatorio El Niño · Perú</h1>'
+               '<p>Esta dirección no se abre en el navegador: es un servidor <b>MCP</b> para asistentes de IA. '
+               'Para usarlo, agrégala como <b>conector personalizado</b> en tu asistente (por ejemplo, en Claude: Configuración → Conectores → Agregar conector personalizado) '
+               'con esta URL:</p><p><code style="background:#18293f;padding:4px 8px;border-radius:4px">https://observatorio-nino-peru.onrender.com/mcp</code></p>'
+               '<p>Herramientas disponibles: estado de El Niño esta semana, serie semanal del mar desde 1981, pronóstico por ciudad, lluvia esperada, '
+               'emergencias recientes (GDACS) y comunicados de ENFEN.</p>'
+               '<p><a style="color:#5fd3e4" href="/">Ir al dashboard del observatorio</a></p></body></html>').encode()
+
+    def send_mcp_405(self):
+        # Status stays 405 (correct for MCP clients); the body explains it to people and AI browsers.
+        self.send_response(405)
+        self.send_header('Allow', 'POST, OPTIONS')
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(self.MCP_405)))
+        self.end_headers()
+        self.wfile.write(self.MCP_405)
+
     def do_GET(self):
         path = urllib.parse.urlsplit(self.path)
         p = path.path
@@ -253,8 +273,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({'status': 'ok', 'version': VERSION, 'server_time': datetime.now(timezone.utc).isoformat()})
         if p == '/mcp':
             # 2026-07-28 removed the GET stream; older clients probing it get 405 too.
-            self.send_response(405); self.send_header('Allow', 'POST, OPTIONS'); self.send_header('Content-Length', '0'); self.end_headers()
-            return
+            return self.send_mcp_405()
         if p in ('/app.py', '/render.yaml', '/mcp_server.py'):
             return self.send_error(404)
         return super().do_GET()
@@ -268,8 +287,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_DELETE(self):
         if urllib.parse.urlsplit(self.path).path == '/mcp':
-            self.send_response(405); self.send_header('Allow', 'POST, OPTIONS'); self.send_header('Content-Length', '0'); self.end_headers()
-            return
+            return self.send_mcp_405()
         self.send_error(404)
 
     def do_OPTIONS(self):
