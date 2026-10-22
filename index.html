@@ -3,508 +3,434 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Observatorio El Niño | Grupo Evidencia · MNRY</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<title>Monitor El Niño · Grupo Evidencia</title>
+<meta name="description" content="Qué está pasando con El Niño en el Perú, explicado en simple: el mar, la lluvia en tu ciudad y lo que dicen las autoridades.">
+<meta property="og:title" content="Monitor El Niño · Grupo Evidencia">
+<meta property="og:description" content="El Niño en el Perú, explicado en simple. Datos públicos de NOAA, ENFEN y Open-Meteo.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-:root{color-scheme:dark;--bg:#0b1522;--panel:#142235;--panel2:#18293f;--edge:#25394f;--text:#eef4fb;--sub:#9fb3c8;--accent:#5fd3e4;--warm:#ffb66c}
+:root{--paper:#faf7f2;--card:#ffffff;--ink:#1b1d22;--sub:#5d6470;--line:#e6e0d6;--accent:#b8322a;--ocean:#1d5f8a;
+--ok:#2f7d4f;--warn:#b7791f;--bad:#b8322a;--soft:#f3eee6}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
-a{color:var(--accent)}
-button,select{font:inherit;background:#203954;border:1px solid #4a6682;border-radius:8px;padding:7px 12px;color:#fff;cursor:pointer}
-button:hover,select:hover{background:#2c4d70}
-button[aria-pressed=true]{background:#126476;border-color:#65d4e3}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#0e1b2b;border-bottom:1px solid var(--edge)}
-.brand{color:var(--accent);font-size:10px;letter-spacing:2px;font-weight:800}
-h1{font-size:20px;margin:2px 0 0;line-height:1.2}
-.top-right{display:flex;align-items:center;gap:10px}
-.dash{padding:12px;display:grid;gap:12px;grid-template-columns:300px minmax(0,1fr) 360px;grid-template-areas:"h h h" "k k k" "l m r" "n n n"}
-.hero{grid-area:h;padding:22px 8px 14px;max-width:980px}
-.kicker{color:#ff8a7a;font-size:12.5px;letter-spacing:2.2px;font-weight:800;text-transform:uppercase}
-.headline{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:clamp(30px,4.2vw,52px);line-height:1.08;margin:10px 0 12px;letter-spacing:-.5px}
-.headline em{font-style:normal;color:#ff6b5b}
-.deck{font-size:clamp(16px,1.5vw,19px);line-height:1.55;color:#d3dfeb;margin:0;max-width:820px}
-.deck b{color:#fff}
-.byline{font-size:12px;color:var(--sub);margin-top:12px}
-.hero-skeleton{opacity:.45}
-.kpis{grid-area:k;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.left{grid-area:l}.center{grid-area:m}.right{grid-area:r}.newsrow{grid-area:n}
-.col{display:grid;gap:12px;align-content:start;min-width:0}
-.card{background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:14px;min-width:0}
-.ptitle{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--sub);font-weight:700;margin:0 0 8px}
-.kpi{text-align:center;border-top:3px solid var(--edge)}
-.value{font-size:40px;line-height:1.1;font-weight:800;margin:4px 0 6px;font-variant-numeric:tabular-nums}
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12.5px;font-weight:700;background:#35485e;color:#fff}
-.plain{margin:8px 0 2px;color:#d3dfeb;font-size:13px}
-.meta{font-size:11.5px;color:var(--sub);margin-top:6px}
-details{margin-top:8px;font-size:13px;color:#cfdce9;text-align:left}
-details summary{cursor:pointer;color:var(--accent);font-weight:600;text-align:center}
-details p{margin:8px 0}
-.scale{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;margin-top:6px}
-.scale span:nth-child(odd){font-variant-numeric:tabular-nums;color:var(--sub)}
-.map{height:calc(100vh - 330px);min-height:480px;border-radius:4px;background:#1c3547}
-.legend-bar{height:10px;border-radius:5px;margin-top:6px;background:linear-gradient(90deg,#6b00db 0%,#0094ff 16.7%,#18fce5 25%,#88ff84 33.3%,#bff4a3 41.7%,#cacab7 50%,#fff679 58.3%,#ffb601 66.7%,#ff7100 75%,#f90113 83.3%,#d30085 91.7%,#800000 100%)}
-.legend-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--sub)}
-.legend{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:10px}
-.keys{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:11.5px;color:var(--sub);margin-top:6px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-.row{border-top:1px solid var(--edge);padding:9px 0}
-.row:first-child{border-top:0}
-.row a{font-weight:650;text-decoration:none}
-.row a:hover{text-decoration:underline}
-.source{font-size:11.5px;color:var(--sub);margin-top:2px}
-.chart{width:100%;height:auto;display:block}
-.controls{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-.forecast{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:10px}
-.day{background:var(--panel2);border-radius:6px;padding:7px 2px;text-align:center;font-size:11px}
-.day b{display:block;font-size:13.5px;margin:4px 0}
-.picker{display:flex;align-items:center;gap:8px}
-.picker select{font-weight:700;flex:1}
-.newsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
-.health .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.health .source{white-space:nowrap}
-.footer{padding:6px 16px 20px;font-size:11.5px;color:var(--sub)}
-.leaflet-popup-content{color:#172335}
-.leaflet-container a{color:#067da0}
-.leaflet-control-layers{font-size:12.5px}
-@media(max-width:1200px){.dash{grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"h h" "k k" "m r" "l r" "n n"}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:820px){.dash{grid-template-columns:minmax(0,1fr);grid-template-areas:"h" "k" "m" "r" "l" "n"}.map{height:420px;min-height:0}.newsgrid{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
-@media(max-width:480px){.kpis{grid-template-columns:1fr}.forecast{grid-template-columns:repeat(4,1fr)}.value{font-size:34px}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--ocean)}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+header{border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
+.logo{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:20px;line-height:1.1}
+.logo small{display:block;font:600 10.5px/1.3 Inter,sans-serif;letter-spacing:1.6px;color:var(--sub);text-transform:uppercase}
+.toplink{font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap}
+.city{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:18px 0 6px}
+.city label{font-weight:600;font-size:15px}
+select,button{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 12px;cursor:pointer}
+select{font-weight:700}
+button.ghost{background:transparent;color:var(--ocean);border-color:transparent;padding:9px 6px;font-weight:600}
+.status{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:8px solid var(--sub);border-radius:14px;padding:16px;margin:10px 0 4px}
+.status .dot{width:16px;height:16px;border-radius:50%;background:var(--sub);flex:none;margin-top:7px}
+.status b{display:block;font-size:22px;line-height:1.2}
+.status p{margin:4px 0 0;color:#30343b;font-size:16px}
+.status .meta{margin-top:6px}
+.kicker{margin-top:30px;color:var(--accent);font-size:12.5px;letter-spacing:2px;font-weight:800;text-transform:uppercase}
+h1{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:clamp(31px,7.6vw,46px);line-height:1.08;letter-spacing:-.4px;margin:10px 0 12px}
+h1 em{font-style:normal;color:var(--accent)}
+.deck{font-size:19px;line-height:1.55;color:#30343b;margin:0}
+h2{font-family:"Source Serif 4",Georgia,serif;font-size:26px;line-height:1.2;margin:40px 0 12px}
+.q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.q .ask{font-size:14px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px}
+.q .ans{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;line-height:1.2;margin:6px 0}
+.q p{margin:6px 0 0}
+.meta{font-size:13px;color:var(--sub);line-height:1.45}
+.more{display:inline-block;margin-top:8px;font-weight:600;font-size:15px}
+.bars{display:grid;gap:9px;margin:14px 0 8px}
+.bar{display:grid;grid-template-columns:62px 1fr 64px;align-items:center;gap:10px;font-size:15px}
+.bar .t{height:22px;border-radius:6px;background:var(--soft);position:relative;overflow:hidden}
+.bar .t span{position:absolute;inset:0 auto 0 0;background:#9aa7b4;border-radius:6px;width:0;transition:width .9s ease}
+.bar.now .t span{background:var(--accent)}
+.bar.now{font-weight:800}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums}
+ul.news,ul.new{list-style:none;padding:0;margin:0}
+ul.new li{padding:10px 0 10px 26px;border-top:1px solid var(--line);position:relative}
+ul.new li:first-child{border-top:0}
+ul.new li::before{content:"●";position:absolute;left:4px;top:10px;color:var(--accent);font-size:12px}
+ul.news li{padding:12px 0;border-top:1px solid var(--line)}
+ul.news li:first-child{border-top:0}
+ul.news a{font-weight:600;text-decoration:none;color:var(--ink)}
+ul.news a:hover{text-decoration:underline}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 16px;margin:8px 0}
+details summary{cursor:pointer;font-weight:700;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";color:var(--sub);font-weight:400;font-size:22px;line-height:1}
+details[open] summary::after{content:"–"}
+details p{margin:0 0 14px}
+.todo{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.todo li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 44px;position:relative}
+.todo li::before{content:"✓";position:absolute;left:14px;top:11px;width:20px;height:20px;border-radius:50%;background:#e7f1ea;color:var(--ok);font-weight:800;font-size:13px;display:grid;place-items:center}
+.phones{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.phones a{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-decoration:none;color:var(--ink)}
+.phones b{font-size:24px;display:block;line-height:1.1}
+.share{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:12px 16px;font-weight:700;text-decoration:none;border:0;font-size:16px}
+.btn.wa{background:#1f8a4c;color:#fff}
+.btn.img{background:var(--ink);color:#fff}
+.notice{background:var(--soft);border-radius:12px;padding:14px 16px;font-size:14.5px;color:#30343b;margin-top:36px}
+footer{margin:28px 0 40px;font-size:13.5px;color:var(--sub);line-height:1.6}
+footer a{color:var(--sub)}
+.skeleton{opacity:.4}
+@media(min-width:720px){.phones{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
-<header>
-  <div><div class="brand">UNA INICIATIVA DE GRUPO EVIDENCIA Y MNRY</div><h1>Observatorio El Niño · Perú</h1></div>
-  <div class="top-right"><span class="meta" id="updated" style="margin:0">Cargando fuentes…</span><button id="refresh">Actualizar</button></div>
-</header>
-<main class="dash">
-<section class="hero hero-skeleton" id="hero" aria-live="polite">
-  <div class="kicker" id="kicker">Observatorio El Niño · Perú</div>
-  <h2 class="headline" id="headline">Leyendo los datos de la semana…</h2>
-  <p class="deck" id="deck"></p>
-  <div class="byline" id="byline"></div>
-</section>
+<header><div class="wrap top">
+  <div class="logo">Monitor El Niño<small>Grupo Evidencia</small></div>
+  <a class="toplink" href="/detalle">Vista detallada →</a>
+</div></header>
 
-<section class="kpis">
-  <article class="card kpi" id="k12">
-    <div class="ptitle">Mar costa norte · Niño 1+2</div>
-    <div class="value" id="n12">—</div>
-    <span class="chip" id="n12chip">Consultando…</span>
-    <p class="plain" id="n12plain"></p>
-    <details><summary>¿Qué significa?</summary>
-      <p>Cuánto más caliente (+) o más frío (−) está el mar frente a Tumbes, Piura y Ecuador, comparado con lo normal para esta época (promedio 1991–2020). Es la zona que más influye en las lluvias de la costa norte.</p>
-      <div class="scale"><span>menos de −1.0 °C</span><span>Frío</span><span>−1.0 a +0.4</span><span>Normal</span><span>+0.4 a +1.0</span><span>Cálido débil</span><span>+1.0 a +1.7</span><span>Cálido moderado</span><span>+1.7 a +3.0</span><span>Cálido fuerte</span><span>más de +3.0</span><span>Cálido extraordinario</span></div>
-      <p class="meta">Escala del índice costero (ICEN) que usa ENFEN con promedios de 3 meses. Aquí se aplica al dato semanal: es una señal temprana, no la clasificación oficial.</p>
-    </details>
-    <div class="meta" id="n12date"></div>
-  </article>
-  <article class="card kpi" id="k34">
-    <div class="ptitle">Pacífico central · Niño 3.4</div>
-    <div class="value" id="n34">—</div>
-    <span class="chip" id="n34chip">Consultando…</span>
-    <p class="plain" id="n34plain"></p>
-    <details><summary>¿Qué significa?</summary>
-      <p>Temperatura del mar en el centro del Pacífico frente a lo normal. Es el indicador que usa NOAA (EE. UU.) para declarar El Niño o La Niña a nivel mundial. Influye sobre todo en las lluvias de la sierra y en el clima global.</p>
-      <div class="scale"><span>−0.5 o menos</span><span>Frío (tipo La Niña)</span><span>−0.5 a +0.5</span><span>Normal</span><span>+0.5 a +1.0</span><span>Cálido débil</span><span>+1.0 a +1.5</span><span>Cálido moderado</span><span>+1.5 a +2.0</span><span>Cálido fuerte</span><span>+2.0 o más</span><span>Cálido muy fuerte</span></div>
-      <p class="meta">NOAA declara El Niño cuando el promedio de 3 meses supera +0.5 °C de forma sostenida.</p>
-    </details>
-    <div class="meta" id="n34date"></div>
-  </article>
-  <article class="card kpi">
-    <div class="ptitle">Emergencias y desastres · 60 días</div>
-    <div class="value" id="dcount" style="color:#ff7a6e">—</div>
-    <div class="meta" id="dmeta">Eventos registrados por GDACS en Perú.</div>
-  </article>
-  <article class="card kpi">
-    <div class="ptitle">ENFEN · comunicado oficial</div>
-    <div class="value" style="font-size:20px;color:var(--warm);margin-top:12px" id="enfen">Consultando…</div>
-    <p class="plain">La comisión peruana que declara oficialmente El Niño costero. Su comunicado explica la situación y lo que se espera.</p>
-    <a id="enfen-link" href="https://enfen.imarpe.gob.pe/downloads/comunicados/" target="_blank" rel="noopener">Leer el comunicado ↗</a>
-  </article>
-</section>
-
-<aside class="col left">
-  <article class="card">
-    <div class="ptitle">Últimas emergencias</div>
-    <div id="dlist">Consultando…</div>
-    <details><summary>Sobre esta fuente</summary>
-      <p>GDACS es el sistema mundial de alertas de desastres de la ONU y la Comisión Europea. Registra sismos, inundaciones, volcanes y otros eventos con impacto relevante; no incluye cada emergencia local.</p>
-      <p id="indeci-note">Consultando INDECI…</p>
-    </details>
-  </article>
-  <article class="card health">
-    <div class="ptitle">Estado de las fuentes</div>
-    <div id="health">Verificando…</div>
-    <p class="meta">Si una fuente no responde se muestra “—”. Eso no significa que no haya lluvias ni emergencias.</p>
-  </article>
-</aside>
-
-<section class="card center">
-  <div class="ptitle">Mapa · temperatura del mar, lluvia esperada y emergencias</div>
-  <div id="map" class="map" aria-label="Mapa del Perú y el Pacífico oriental"></div>
-  <div class="legend">
-    <div><div class="meta" style="margin:0">Mar frente a lo normal (satélite, imagen más reciente)</div>
-      <div class="legend-bar"></div>
-      <div class="legend-labels"><span>−3</span><span>−2</span><span>−1</span><span>0 normal</span><span>+1</span><span>+2</span><span>+3 °C o más</span></div></div>
-    <div class="keys">
-      <span><span class="dot" style="background:#8fb3cc"></span>&lt;1 mm</span>
-      <span><span class="dot" style="background:#4fb3ff"></span>1–10 mm</span>
-      <span><span class="dot" style="background:#1f5fff"></span>10–30 mm</span>
-      <span><span class="dot" style="background:#8a2be2"></span>&gt;30 mm</span>
-      <span>(lluvia 3 días)</span>
-      <span><span class="dot" style="background:#ff5a4f;border:2px solid #fff"></span>Emergencia</span>
-    </div>
+<main class="wrap">
+  <div class="city">
+    <label for="city">Tu ciudad</label>
+    <select id="city"></select>
+    <button class="ghost" id="geo" type="button">📍 Usar mi ubicación</button>
   </div>
-  <div class="meta" id="map-status">Cargando capas…</div>
-</section>
 
-<aside class="col right">
-  <article class="card">
-    <div class="ptitle">Pronóstico · 7 días</div>
-    <div class="picker"><label for="region">Ciudad</label><select id="region"></select></div>
-    <div id="forecast" class="forecast">Consultando pronóstico…</div>
-    <div class="meta" id="forecast-caption">Lluvia diaria esperada (mm) y temperatura mínima–máxima.</div>
-    <div class="meta"><a href="https://www.senamhi.gob.pe/?p=aviso-meteorologico" target="_blank" rel="noopener">Avisos oficiales SENAMHI ↗</a></div>
-  </article>
-  <article class="card">
-    <div class="ptitle">¿Se está calentando el mar? · último año</div>
-    <div class="controls"><button id="chart12" aria-pressed="true">Costa norte (1+2)</button><button id="chart34" aria-pressed="false">Pacífico central (3.4)</button></div>
-    <svg id="trend" class="chart" viewBox="0 0 360 205" role="img" aria-label="Gráfico de anomalías semanales"><text x="20" y="90" fill="#a4b7cc">Esperando datos de NOAA…</text></svg>
-    <div class="meta" id="trend-caption"></div>
-  </article>
-</aside>
+  <section class="status skeleton" id="status" aria-live="polite">
+    <span class="dot" id="st-dot"></span>
+    <div><b id="st-word">Consultando tu zona…</b><p id="st-why"></p>
+      <div class="meta">Indicador referencial del Monitor, no es una alerta oficial.</div></div>
+  </section>
 
-<section class="card newsrow">
-  <div class="ptitle">Noticias recientes</div>
-  <div id="news" class="newsgrid">Consultando titulares…</div>
-  <div class="meta">Titulares de medios enlazados a su publicación original. No son pronósticos oficiales.</div>
-</section>
+  <section id="hero" class="skeleton">
+    <div class="kicker" id="kicker">El Niño en el Perú</div>
+    <h1 id="headline">Leyendo los datos de la semana…</h1>
+    <p class="deck" id="deck"></p>
+  </section>
+
+  <h2>Lo que tienes que saber</h2>
+  <article class="q"><div class="ask">¿Está empeorando?</div><div class="ans" id="a1">—</div><p id="a1p"></p>
+    <div class="meta" id="a1m"></div></article>
+  <article class="q"><div class="ask" id="a2q">¿Va a llover en tu ciudad?</div><div class="ans" id="a2">—</div><p id="a2p"></p>
+    <div class="meta" id="a2m"></div>
+    <a class="more" href="https://www.senamhi.gob.pe/?p=aviso-meteorologico" target="_blank" rel="noopener">Avisos oficiales de SENAMHI ↗</a></article>
+  <article class="q"><div class="ask">¿Qué dicen las autoridades?</div><div class="ans" id="a3">—</div><p id="a3p"></p>
+    <div class="meta" id="a3m"></div>
+    <a class="more" id="a3l" href="https://enfen.imarpe.gob.pe/downloads/comunicados/" target="_blank" rel="noopener">Leer el comunicado de ENFEN ↗</a></article>
+
+  <h2 id="cmp-title">¿Será como el 2017?</h2>
+  <p id="cmp-text" style="margin:0"></p>
+  <div class="bars" id="bars"></div>
+  <div class="meta">Temperatura del mar frente al norte del Perú comparada con lo normal: el punto más alto de cada Niño y el dato de esta semana. Fuente: NOAA. Un mar igual de caliente no significa que vaya a llover igual: eso depende de otros factores que ENFEN evalúa.</div>
+
+  <h2>Lo nuevo esta semana</h2>
+  <ul class="new" id="new"><li>Consultando…</li></ul>
+
+  <h2>Compártelo</h2>
+  <p style="margin:0">Mándale esto a tu familia o a tu grupo de vecinos.</p>
+  <div class="share">
+    <a class="btn wa" id="wa" href="https://wa.me/" target="_blank" rel="noopener">Compartir por WhatsApp</a>
+    <button class="btn img" id="img" type="button">Descargar imagen</button>
+  </div>
+
+  <h2>Preguntas frecuentes</h2>
+  <div id="faq"></div>
+
+  <h2>¿Qué hago?</h2>
+  <ul class="todo">
+    <li>Ten lista una mochila de emergencia: agua, linterna, radio a pilas, botiquín, cargador y tus documentos en una bolsa plástica.</li>
+    <li>No cruces ríos ni quebradas cuando lleve agua o barro, ni a pie ni en carro. Una corriente baja puede arrastrarte.</li>
+    <li>Limpia techos, canaletas y desagües antes de que llueva.</li>
+    <li>Averigua cuál es la zona segura y la ruta de evacuación de tu barrio.</li>
+    <li>No construyas, acampes ni dejes cosas en el cauce de ríos o quebradas secas.</li>
+    <li>Sigue los avisos de SENAMHI y las indicaciones de INDECI y de tu municipalidad.</li>
+  </ul>
+  <div class="phones">
+    <a href="tel:116"><b>116</b>Bomberos</a>
+    <a href="tel:105"><b>105</b>Policía</a>
+    <a href="tel:106"><b>106</b>SAMU (urgencias médicas)</a>
+    <a href="tel:911"><b>911</b>Emergencias (en prueba en Lima y Callao)</a>
+  </div>
+  <div class="meta" style="margin-top:8px">Recomendaciones generales de prevención. Ante una emergencia, sigue siempre a las autoridades locales.</div>
+
+  <h2>En las noticias</h2>
+  <ul class="news" id="news"><li>Consultando titulares…</li></ul>
+
+  <div class="notice"><b>Esto no es un pronóstico oficial.</b> El Monitor El Niño reúne datos públicos y los explica en simple. Para decisiones importantes, sigue a <a href="https://enfen.imarpe.gob.pe/" target="_blank" rel="noopener">ENFEN</a>, <a href="https://www.senamhi.gob.pe/" target="_blank" rel="noopener">SENAMHI</a> e <a href="https://portal.indeci.gob.pe/" target="_blank" rel="noopener">INDECI</a>.</div>
+
+  <footer>
+    <div id="updated">Cargando…</div>
+    Datos: NOAA (temperatura del mar), ENFEN (comunicados oficiales), Open-Meteo (pronóstico de lluvia con 51 escenarios del modelo europeo ECMWF), GDACS (emergencias).<br>
+    <a href="/detalle">Vista detallada para periodistas y empresas</a> · Datos para IA (MCP): <code>observatorio-nino-peru.onrender.com/mcp</code><br>
+    Una iniciativa de <b>Grupo Evidencia</b> con MNRY · Más información en <a href="https://mantarraya.pe" target="_blank" rel="noopener">mantarraya.pe</a>
+  </footer>
 </main>
-<footer class="footer">GRUPO EVIDENCIA · MNRY · Observatorio independiente. Datos de NOAA, NASA, ENFEN, Open-Meteo, GDACS e INDECI. No reemplaza los avisos oficiales de SENAMHI, ENFEN o INDECI.<br>¿Usas IA? Conecta los datos del observatorio a tu asistente (MCP): <code>https://observatorio-nino-peru.onrender.com/mcp</code><br>Más información en <a href="https://mantarraya.pe" target="_blank" rel="noopener">mantarraya.pe</a></footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = v => (v >= 0 ? '+' : '') + Number(v).toFixed(1) + ' °C';
-const fmtDate = iso => { if (!iso) return ''; const [y,m,d] = iso.slice(0,10).split('-'); return `${d}/${m}/${y}`; };
-let dataset = {}, chart = 'nino12';
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const longDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return `${d} de ${MESES[m-1]}`; };
+const dayDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return `${DIAS[new Date(y, m-1, d).getDay()]} ${d} de ${MESES[m-1]}`; };
+const num = (v, d=1) => Math.abs(v).toFixed(d).replace(/\.0$/, '').replace('.', ',');
+const deg = v => num(v) + ' °C';
+function pick(options, seed){ let h = 0; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0; return options[h % options.length]; }
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch(e){} } };
 
 const CITIES = [['tumbes','Tumbes'],['piura','Piura'],['chiclayo','Chiclayo'],['trujillo','Trujillo'],['chimbote','Chimbote'],['lima','Lima'],['ica','Ica'],['arequipa','Arequipa'],['huancayo','Huancayo'],['cusco','Cusco'],['puno','Puno'],['iquitos','Iquitos']];
-$('region').innerHTML = CITIES.map(([v,n]) => `<option value="${v}"${v==='lima'?' selected':''}>${n}</option>`).join('');
+const COAST = ['costa_norte','costa_centro'];
+const ZONE_NAME = {costa_norte:'la costa norte', costa_centro:'la costa central', sierra_centro:'la sierra central', sierra_sur:'la sierra sur', amazonia:'la Amazonía'};
+let S = {}, RAIN = null, city = store.get('monitor.city') || 'lima';
+if (!CITIES.some(c => c[0] === city)) city = 'lima';
+$('city').innerHTML = CITIES.map(([v,n]) => `<option value="${v}">${n}</option>`).join('');
+$('city').value = city;
 
-// ---------- Classification in plain language ----------
-function class12(v){
-  if (v > 3.0) return ['Cálido extraordinario', '#a3141c', 'El mar está muchísimo más caliente de lo normal. Riesgo muy alto de lluvias intensas en la costa norte si se mantiene.'];
-  if (v > 1.7) return ['Cálido fuerte', '#c2410c', 'El mar está bastante más caliente de lo normal. Si se mantiene, aumenta el riesgo de lluvias fuertes en la costa norte.'];
-  if (v > 1.0) return ['Cálido moderado', '#b45309', 'El mar está más caliente de lo normal. Conviene seguir los comunicados de ENFEN.'];
-  if (v > 0.4) return ['Cálido débil', '#a16207', 'El mar está un poco más caliente de lo normal.'];
-  if (v >= -1.0) return ['Normal', '#2f6b5e', 'La temperatura del mar está dentro de lo normal para esta época.'];
-  return ['Frío', '#1d4ed8', 'El mar está más frío de lo normal (condición tipo La Niña costera).'];
+// ---------- rain in words (reference thresholds; the coast is a desert, so less rain already matters) ----------
+function rainLevel(mmDay, zone){
+  const t = COAST.includes(zone) ? [0.5, 2, 10] : [1, 10, 30];
+  return mmDay >= t[2] ? 3 : mmDay >= t[1] ? 2 : mmDay >= t[0] ? 1 : 0;
 }
-function class34(v){
-  if (v >= 2.0) return ['Cálido muy fuerte', '#a3141c', 'El Pacífico central está muy caliente: señal de El Niño intenso a nivel global.'];
-  if (v >= 1.5) return ['Cálido fuerte', '#c2410c', 'El Pacífico central está bastante caliente: señal de El Niño fuerte.'];
-  if (v >= 1.0) return ['Cálido moderado', '#b45309', 'El Pacífico central está más caliente de lo normal.'];
-  if (v >= 0.5) return ['Cálido débil', '#a16207', 'El Pacífico central está algo más caliente de lo normal.'];
-  if (v > -0.5) return ['Normal', '#2f6b5e', 'El Pacífico central está dentro de lo normal.'];
-  return ['Frío (tipo La Niña)', '#1d4ed8', 'El Pacífico central está más frío de lo normal.'];
-}
-function setIndex(key, v, date, fn){
-  const [label, color, text] = fn(v);
-  $(key).textContent = fmt(v);
-  $(key + 'chip').textContent = label;
-  $(key + 'chip').style.background = color;
-  $(key.replace('n', 'k')).style.borderTopColor = color;
-  $(key + 'plain').textContent = text;
-  $(key + 'date').textContent = 'Semana del ' + fmtDate(date) + ' · fuente: NOAA (EE. UU.)';
-}
+const RAIN_WORD = ['Sin lluvia importante','Lluvia ligera','Lluvia moderada','Lluvia fuerte'];
 
-// ---------- Map ----------
-const map = L.map('map', {scrollWheelZoom: false}).setView([-9, -81], window.innerWidth < 600 ? 4 : 5);
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 16, attribution: 'Mapa base © Esri, HERE, Garmin, © OpenStreetMap'
-}).addTo(map);
-// City/country names drawn above the sea-temperature layer
-map.createPane('labels'); map.getPane('labels').style.zIndex = 350; map.getPane('labels').style.pointerEvents = 'none';
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 16, pane: 'labels'
-}).addTo(map);
-// Satellite SST anomaly: NASA GIBS WMS, no TIME parameter = most recent available day.
-const sstLayer = L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', {
-  layers: 'GHRSST_L4_MUR_Sea_Surface_Temperature_Anomalies', format: 'image/png',
-  transparent: true, opacity: 0.85, maxNativeZoom: 7, attribution: 'NASA GIBS · MUR SST'
-}).addTo(map);
-let sstErrors = 0, sstLoaded = 0;
-sstLayer.on('tileerror', () => { sstErrors++; mapStatus(); });
-sstLayer.on('tileload', () => { sstLoaded++; mapStatus(); });
-const ninoBox = L.rectangle([[-10,-90],[0,-80]], {color:'#ffffff', weight:1.5, dashArray:'6 6', fill:false}).addTo(map);
-const rainLayer = L.layerGroup().addTo(map);
-map.createPane('events').style.zIndex = 650;
-const eventLayer = L.layerGroup().addTo(map);
-L.control.layers(null, {
-  'Temperatura del mar (satélite)': sstLayer,
-  'Lluvia esperada · 3 días': rainLayer,
-  'Emergencias y desastres': eventLayer,
-  'Zona Niño 1+2': ninoBox
-}, {collapsed: window.innerWidth < 820}).addTo(map);
-const cityMarkers = {};
-let rainState = 'Cargando lluvias…', eventState = 'Cargando emergencias…';
-function mapStatus(){
-  const sst = sstLoaded ? 'Mar: cargado' : (sstErrors ? 'Mar: la capa satelital no responde' : 'Mar: cargando…');
-  $('map-status').textContent = [sst, rainState, eventState].join(' · ');
-}
-function rainColor(mm){ return mm < 1 ? '#8fb3cc' : mm < 10 ? '#4fb3ff' : mm < 30 ? '#1f5fff' : '#8a2be2'; }
+function cityData(){ return (RAIN?.cities || []).find(c => c.id === city); }
 
-async function loadRain(){
-  try {
-    const r = await fetch('/api/rain-map', {cache:'no-store'});
-    const j = await r.json();
-    const cities = j.data?.cities || [];
-    if (!cities.length) throw Error(j.error || 'sin datos');
-    rainLayer.clearLayers();
-    for (const c of cities){
-      const mm = Number(c.rain_3d) || 0;
-      const m = L.circleMarker([c.lat, c.lon], {radius: 7 + Math.min(14, Math.sqrt(mm) * 2.5), color:'#ffffff', weight:1.5, fillColor: rainColor(mm), fillOpacity: .9})
-        .bindTooltip(`${esc(c.name)}: ${mm} mm`)
-        .bindPopup(`<b>${esc(c.name)}</b><br>Lluvia esperada en 3 días: <b>${mm} mm</b><br><a href="#" data-city="${esc(c.id)}">Ver pronóstico de 7 días</a>`)
-        .addTo(rainLayer);
-      cityMarkers[c.id] = m;
-    }
-    rainState = `Lluvia: ${cities.length} ciudades`;
-    window.rainCities = cities; buildHero();
-  } catch(e){ rainState = 'Lluvia: no disponible'; }
-  mapStatus();
-}
-map.on('popupopen', e => {
-  const a = e.popup.getElement()?.querySelector('[data-city]');
-  if (a) a.addEventListener('click', ev => { ev.preventDefault(); $('region').value = a.dataset.city; forecast(false); $('region').scrollIntoView({behavior:'smooth', block:'center'}); });
-});
-
-function drawEvents(){
-  eventLayer.clearLayers();
-  const evs = dataset.gdacs?.data?.events || [];
-  for (const e of evs){
-    const color = e.alert === 'red' ? '#d61f1f' : e.alert === 'orange' ? '#f08a24' : '#ff5a4f';
-    L.circleMarker([e.lat, e.lon], {pane: 'events', radius: 7, color:'#ffffff', weight:2, fillColor: color, fillOpacity: .95})
-      .bindPopup(`<b>${esc(e.type)}</b> · ${esc(fmtDate(e.date))}<br>${esc(e.detail || e.name)}<br><a href="${esc(e.url)}" target="_blank" rel="noopener">Informe GDACS ↗</a>`)
-      .addTo(eventLayer);
-  }
-  eventState = dataset.gdacs?.status === 'ok' || evs.length ? `Emergencias: ${evs.length}` : 'Emergencias: no disponible';
-  mapStatus();
+function renderStatus(){
+  const c = cityData(), of = S.oficial?.data;
+  if (!c) return;
+  const max = c.max_dia3?.p50 ?? c.max_dia ?? 0;
+  const lvl = rainLevel(max, c.zona);
+  const outlook = of?.lluvias?.[c.zona];
+  const above = outlook?.nivel === 'sobre lo normal';
+  let state = 'Tranquilo', color = 'var(--ok)', why = [];
+  if (lvl >= 3) { state = 'Cuidado'; color = 'var(--bad)'; why.push(`El modelo prevé ${RAIN_WORD[lvl].toLowerCase()} en ${c.name} en los próximos días.`);
+    if (above) why.push(`Además, ENFEN prevé lluvias por encima de lo normal en ${ZONE_NAME[c.zona]} en los próximos meses.`); }
+  else if (lvl === 2 || above) {
+    state = 'Atento'; color = 'var(--warn)';
+    if (lvl === 2) why.push(`Se espera lluvia moderada en ${c.name} en los próximos días.`);
+    if (above) why.push(`ENFEN prevé lluvias por encima de lo normal en ${ZONE_NAME[c.zona]} en los próximos meses.`);
+  } else why.push(lvl === 1 ? `Se espera lluvia ligera en ${c.name} en los próximos tres días, nada fuera de lo común.` : `No se esperan lluvias importantes en ${c.name} en los próximos tres días.`);
+  $('st-word').textContent = `Tu zona: ${state}`;
+  $('st-why').textContent = why.join(' ');
+  $('st-dot').style.background = color;
+  $('status').style.borderLeftColor = color;
+  $('status').classList.remove('skeleton');
+  window.STATUS = {state, color};
 }
 
-// ---------- Chart ----------
+// ---------- headline in plain language ----------
+function story(){
+  const n = S.noaa?.data?.latest, ins = S.noaa?.data?.insights, of = S.oficial?.data;
+  if (!n || !ins) return null;
+  const v = n.nino12, seed = n.date;
+  const peak = name => (ins.episodios || []).find(e => e.nombre === name)?.pico_nino12;
+  const p83 = peak('1983'), p98 = peak('1998'), p17 = peak('2017');
+  let h;
+  if (ins.categoria === 'normal') h = pick(['El mar frente al Perú está normal esta semana', 'Semana tranquila en el mar peruano'], seed);
+  else if (ins.categoria === 'frío') h = pick(['El mar frente al Perú está más frío de lo normal', 'Mar frío frente a la costa peruana'], seed);
+  else if (ins.igual_o_mayor_desde === null && v > 0.4) h = pick([
+    `Récord: el mar frente al Perú nunca estuvo tan caliente desde que hay registros semanales (${ins.serie_desde.slice(0,4)})`,
+    'Ni en 1983 ni en 1998: el mar peruano nunca estuvo tan caliente desde que hay registros semanales',
+    `Récord: el mar está <em>${deg(v)}</em> más caliente de lo normal, más que en 1983 y 1998`], seed);
+  else if (p83 != null && p98 != null && v > Math.max(p83, p98)) h = pick([
+    'El mar frente al Perú está más caliente que en los grandes Niños de 1983 y 1998',
+    `El mar está <em>${deg(v)}</em> más caliente de lo normal, más que en 1983 y 1998`], seed);
+  else if (p17 != null && v > p17) h = pick([
+    'El mar frente al Perú ya está más caliente que en el Niño costero de 2017',
+    `Más que en 2017: el mar está <em>${deg(v)}</em> por encima de lo normal`], seed);
+  else if (ins.categoria_anterior !== ins.categoria) h = ins.cambio_1_semana > 0
+    ? pick(['El mar frente al Perú se calentó más esta semana', 'Sube la temperatura del mar frente al norte del Perú'], seed)
+    : pick(['El mar frente al Perú empieza a enfriarse', 'Primer respiro: baja la temperatura del mar'], seed);
+  else if (ins.cambio_4_semanas > 0.3) h = pick(['El mar frente al norte del Perú sigue calentándose', 'Otra semana de mar más caliente frente al Perú'], seed);
+  else if (ins.cambio_4_semanas < -0.3) h = pick(['El mar frente al Perú empieza a enfriarse', 'Baja la temperatura del mar, pero sigue alta'], seed);
+  else h = pick(['El mar sigue caliente frente al norte del Perú', 'Sin cambios: el mar se mantiene caliente'], seed);
 
-// ---------- Automatic headline: picks the strongest story in this week's data ----------
-const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-const longDate = iso => { const [y,m,d] = iso.split('-').map(Number); return `${d} de ${MESES[m-1]}`; };
-const num = (v, d=1) => Math.abs(v).toFixed(d).replace(/\.0$/, '').replace('.', ',');
-const signed = v => (v >= 0 ? '+' : '−') + num(v) + ' °C';
-const ORD = ['','primera','segunda','tercera','cuarta','quinta','sexta','séptima','octava','novena','décima'];
-const nth = n => n < ORD.length ? ORD[n] : `${n}.ª`;
-const CAT_LABEL = {'extraordinario':'extraordinario','fuerte':'cálido fuerte','moderado':'cálido moderado','débil':'cálido débil','normal':'normal','frío':'frío'};
-const CAT_RANK = {'frío':0,'normal':1,'débil':2,'moderado':3,'fuerte':4,'extraordinario':5};
-function pick(options, seed){ // same choice all week, different choice next week
-  let h = 0; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return options[h % options.length];
-}
-function heroStory(n, ins){
-  const v = n.nino12, cat = ins.categoria, lab = CAT_LABEL[cat], warm = v > 0.4, cold = cat === 'frío';
-  const sinceYear = ins.igual_o_mayor_desde ? Number(ins.igual_o_mayor_desde.slice(0,4)) : null;
-  const thisYear = Number(n.date.slice(0,4));
-  const val = `<em>${signed(v)}</em>`;
-  // 1. Record or multi-year high
-  if (warm && sinceYear === null) {
-    const years = thisYear - Number(ins.serie_desde.slice(0,4));
-    return [`Récord: el mar frente al Perú, el más caliente en ${years} años de registros`,
-            `${val}: el valor más alto desde que hay registros semanales (${ins.serie_desde.slice(0,4)})`,
-            `Nunca se había medido el mar peruano tan caliente: ${val}`];
-  }
-  if (warm && thisYear - sinceYear >= 3) {
-    const since = sinceYear;
-    return [`El mar frente al Perú, en su punto más caliente desde ${since}`,
-            `${val}: el mar peruano no estaba tan caliente desde ${since}`,
-            `Nivel no visto desde ${since}: el mar está ${val} sobre lo normal`];
-  }
-  // 2. Category change this week
-  if (ins.categoria_anterior !== cat) {
-    const up = CAT_RANK[cat] > CAT_RANK[ins.categoria_anterior];
-    if (cat === 'normal') return [`El mar frente al Perú vuelve a la normalidad`, `Fin de la anomalía: el mar regresa a valores normales`];
-    return up ? [`El mar sube de nivel: ahora es ${lab}`, `Salto esta semana: el mar pasa a nivel ${lab}`, `El calentamiento escala a nivel ${lab}`]
-              : [`El mar baja a nivel ${lab}, pero sigue ${warm ? 'caliente' : 'frío'}`, `Primer respiro: el mar desciende a nivel ${lab}`];
-  }
-  // 3. Long streak at a non-normal level
-  if (cat !== 'normal' && ins.racha_semanas >= 3) {
-    return [`${nth(ins.racha_semanas)[0].toUpperCase() + nth(ins.racha_semanas).slice(1)} semana seguida de mar ${lab} frente al Perú`,
-            `${ins.racha_semanas} semanas en nivel ${lab}: el mar no da tregua`,
-            `El mar suma ${ins.racha_semanas} semanas en nivel ${lab}`];
-  }
-  // 4. Strong trend over a month
-  if (Math.abs(ins.cambio_4_semanas) >= 0.5) {
-    return ins.cambio_4_semanas > 0
-      ? [`El mar sigue calentándose: ${num(ins.cambio_4_semanas)} °C más que hace un mes`, `Cuatro semanas al alza: el mar ya está ${val} sobre lo normal`]
-      : [`El mar empieza a enfriarse: ${num(ins.cambio_4_semanas)} °C menos que hace un mes`, `Señal de alivio: el mar baja ${num(ins.cambio_4_semanas)} °C en un mes`];
-  }
-  // 5. Stable
-  if (cat === 'normal') return [`El mar frente al Perú se mantiene dentro de lo normal`, `Semana tranquila en el mar peruano`];
-  return [`El mar se mantiene ${val} ${cold ? 'bajo' : 'sobre'} lo normal`, `Sin cambios de fondo: el mar sigue en nivel ${lab}`];
-}
-function heroDeck(n, ins, seed){
   const parts = [];
-  const lab = CAT_LABEL[ins.categoria];
-  const d4 = ins.cambio_4_semanas, trend = d4 > 0.2 ? 'y sigue subiendo' : d4 < -0.2 ? 'aunque viene bajando' : 'y se mantiene estable';
-  if (ins.categoria === 'normal') parts.push(pick([
-    `La temperatura del mar en la costa norte está dentro de lo normal (${signed(n.nino12)} frente al promedio) ${trend}.`,
-    `Frente a Tumbes y Piura el mar no muestra anomalías importantes (${signed(n.nino12)}).`], seed + 'a'));
-  else parts.push(pick([
-    `La costa norte está <b>${signed(n.nino12)}</b> ${n.nino12 < 0 ? 'bajo' : 'sobre'} lo normal, nivel ${lab}, ${trend}.`,
-    `Frente a Tumbes y Piura el mar marca <b>${signed(n.nino12)}</b> ${n.nino12 < 0 ? 'bajo' : 'sobre'} lo normal (${lab}) ${trend}.`,
-    `El indicador costero llega a <b>${signed(n.nino12)}</b>, nivel ${lab}, ${trend}.`], seed + 'a'));
-  if (Math.abs(n.nino34) >= 0.5) parts.push(pick([
-    `En el Pacífico central la anomalía es de ${signed(n.nino34)}, señal de un evento que va más allá de la costa.`,
-    `El Pacífico central también está caliente (${signed(n.nino34)}).`], seed + 'b'));
-  const cities = (window.rainCities || []).slice().sort((a,b) => b.rain_3d - a.rain_3d);
-  if (cities.length) {
-    const top = cities[0];
-    parts.push(top.rain_3d >= 5
-      ? pick([`Para los próximos tres días, ${top.name} es la ciudad con más lluvia esperada (${num(top.rain_3d)} mm).`,
-              `${top.name} encabeza la lluvia pronosticada para los próximos tres días: ${num(top.rain_3d)} mm.`], seed + 'c')
-      : `Por ahora no se pronostican lluvias importantes en las ciudades monitoreadas.`);
+  if (of) {
+    const zones = Object.entries(of.lluvias || {}).filter(([k, z]) => z.nivel === 'sobre lo normal').map(([k]) => ZONE_NAME[k]);
+    parts.push(`La comisión oficial que vigila El Niño (ENFEN) mantiene la <b>${esc(of.estado_alerta.charAt(0).toLowerCase() + of.estado_alerta.slice(1))}</b>` +
+      (zones.length ? ` y prevé lluvias por encima de lo normal en ${zones.join(' y ')} en los próximos meses.` : '.'));
   }
-  const evs = dataset.gdacs?.data?.events || [];
-  if (evs.length) parts.push(pick([
-    `GDACS registra ${evs.length} ${evs.length === 1 ? 'emergencia' : 'emergencias'} en el país en los últimos 60 días.`,
-    `En los últimos 60 días se registraron ${evs.length} ${evs.length === 1 ? 'evento' : 'eventos'} de impacto relevante en el Perú.`], seed + 'd'));
-  return parts.slice(0, 3).join(' ');
-}
-function buildHero(){
-  const n = dataset.noaa?.data?.latest, ins = dataset.noaa?.data?.insights;
-  if (!n || !ins) return;
-  const seed = n.date;
-  const lab = CAT_LABEL[ins.categoria];
-  const kicker = ins.categoria === 'normal' ? 'Mar peruano' : ins.categoria === 'frío' ? 'Mar frío frente al Perú' : 'El Niño costero';
-  $('kicker').textContent = `${kicker} · semana del ${longDate(n.date)}`;
-  $('headline').innerHTML = pick(heroStory(n, ins), seed);
-  $('deck').innerHTML = heroDeck(n, ins, seed);
-  $('byline').textContent = 'Titular generado automáticamente con datos de NOAA, Open-Meteo y GDACS. Categoría referencial (escala ICEN de ENFEN aplicada al dato semanal).';
-  $('hero').classList.remove('hero-skeleton');
+  const c = cityData();
+  if (c) {
+    const lvl = rainLevel(c.max_dia3?.p50 ?? c.max_dia ?? 0, c.zona);
+    parts.push(lvl === 0 ? `En ${c.name}, por ahora no se esperan lluvias importantes.` : `En ${c.name} se espera ${RAIN_WORD[lvl].toLowerCase()} en los próximos días.`);
+  }
+  return {h, deck: parts.join(' '), kicker: ins.categoria === 'normal' ? 'El mar peruano' : 'El Niño costero', week: n.date};
 }
 
-function plot(){
-  const rows = dataset.noaa?.data?.series || [];
-  const svg = $('trend');
-  if (rows.length < 2){ svg.innerHTML = '<text x="20" y="90" fill="#a4b7cc">Datos de NOAA no disponibles</text>'; return; }
-  const vals = rows.map(x => Number(x[chart]));
-  const warm = chart === 'nino12' ? 0.4 : 0.5;
-  const min = Math.floor(Math.min(-1, ...vals)), max = Math.ceil(Math.max(1, ...vals));
-  const L0 = 34, R = 354, T = 10, B = 172;
-  const X = i => L0 + i * (R - L0) / (vals.length - 1), Y = v => B - (v - min) * (B - T) / (max - min);
-  let out = '';
-  const step = (max - min) > 6 ? 2 : 1;
-  for (let t = min; t <= max; t += step){
-    out += `<line x1="${L0}" x2="${R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#2a405a"/><text x="${L0-6}" y="${Y(t)+4}" fill="#a4b7cc" font-size="12" text-anchor="end">${t>0?'+':''}${t}°</text>`;
-  }
-  out += `<line x1="${L0}" x2="${R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#cbd5e1" stroke-width="1.5"/><text x="${R}" y="${Y(0)-5}" fill="#cbd5e1" font-size="12" text-anchor="end">normal</text>`;
-  out += `<line x1="${L0}" x2="${R}" y1="${Y(warm)}" y2="${Y(warm)}" stroke="#ffb66c" stroke-dasharray="5 5"/><text x="${L0+4}" y="${Y(warm)-5}" fill="#ffb66c" font-size="12">umbral cálido (+${warm})</text>`;
-  out += `<polyline points="${vals.map((v,i)=>`${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="#60d6e7" stroke-width="2.5" stroke-linejoin="round"/>`;
-  out += vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="2.4" fill="#60d6e7"><title>Semana del ${esc(fmtDate(rows[i].date))}: ${fmt(v)}</title></circle>`).join('');
-  out += `<text x="${L0}" y="198" fill="#a4b7cc" font-size="12">${esc(fmtDate(rows[0].date))}</text><text x="${R}" y="198" fill="#a4b7cc" font-size="12" text-anchor="end">${esc(fmtDate(rows.at(-1).date))}</text>`;
-  svg.innerHTML = out;
-  const last = vals.at(-1), prev = vals.at(-5);
-  const trend = last - prev > 0.2 ? 'subiendo' : prev - last > 0.2 ? 'bajando' : 'estable';
-  $('trend-caption').textContent = `${chart==='nino12'?'Costa norte':'Pacífico central'}: ${fmt(last)} esta semana, tendencia ${trend} en el último mes. Encima de la línea “normal” = mar más caliente de lo habitual. Pasa el cursor sobre un punto para ver la semana.`;
+function renderHero(){
+  const st = story(); if (!st) return;
+  $('kicker').textContent = `${st.kicker} · semana del ${longDate(st.week)}`;
+  $('headline').innerHTML = st.h;
+  $('deck').innerHTML = st.deck;
+  $('hero').classList.remove('skeleton');
+  const plain = $('headline').textContent;
+  const msg = `${plain}. Mira cómo está tu zona: ${location.origin}`;
+  $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
 }
 
-// ---------- Lists ----------
-function row(title, url, detail){
-  const wrap = document.createElement('div'); wrap.className = 'row';
-  const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = title; wrap.append(a);
-  const m = document.createElement('div'); m.className = 'source'; m.textContent = detail; wrap.append(m);
-  return wrap;
+// ---------- the three answers ----------
+function renderAnswers(){
+  const n = S.noaa?.data?.latest, ins = S.noaa?.data?.insights, of = S.oficial?.data;
+  if (n && ins) {
+    const d4 = ins.cambio_4_semanas;
+    $('a1').textContent = ins.categoria === 'normal' ? 'No, el mar está normal' : d4 > 0.3 ? 'Sí, el mar sigue calentándose' : d4 < -0.3 ? 'Está bajando un poco' : 'Se mantiene igual';
+    $('a1p').textContent = ins.categoria === 'normal'
+      ? 'La temperatura del mar frente a Tumbes y Piura está dentro de lo normal.'
+      : `Esta semana el mar frente a Tumbes y Piura está ${deg(n.nino12)} más ${n.nino12 >= 0 ? 'caliente' : 'frío'} de lo normal` +
+        (Math.abs(d4) >= 0.1 ? `; hace un mes la diferencia era de ${deg(n.nino12 - d4)}.` : '.');
+    $('a1m').textContent = `Dato semanal de NOAA, semana del ${longDate(n.date)}.`;
+  }
+  const c = cityData();
+  if (c) {
+    const max = c.max_dia3?.p50 ?? c.max_dia ?? 0, lvl = rainLevel(max, c.zona);
+    $('a2q').textContent = `¿Va a llover en ${c.name}?`;
+    $('a2').textContent = lvl === 0 ? 'No se esperan lluvias importantes' : `${RAIN_WORD[lvl]} en los próximos días`;
+    const t = c.total3;
+    $('a2p').textContent = t && t.p90 > 0.5
+      ? `En los próximos tres días podría caer entre ${num(t.p10)} y ${num(t.p90)} mm de lluvia en total, según 51 escenarios de un modelo europeo.`
+      : 'En los próximos tres días, casi todos los escenarios del modelo indican poca o ninguna lluvia.';
+    const z = of?.lluvias?.[c.zona];
+    $('a2m').textContent = (z ? z.texto + ' ' : '') + 'Es un pronóstico de modelo, no un aviso oficial.';
+  }
+  if (of) {
+    $('a3').textContent = of.estado_alerta;
+    $('a3p').textContent = `ENFEN prevé que El Niño costero sea de magnitud ${of.magnitud_costa} hasta ${of.magnitud_costa_hasta} y que ${of.duracion}.`;
+    $('a3m').textContent = `${of.comunicado}, del ${longDate(of.fecha)}. Próximo comunicado: ${dayDate(of.proximo_comunicado)}.`;
+    $('a3l').href = of.url;
+  } else {
+    $('a3').textContent = 'Consulta a ENFEN';
+    $('a3p').textContent = 'No pudimos cargar el último comunicado. Revísalo directamente en la página de ENFEN.';
+  }
 }
+
+// ---------- comparison with past events ----------
+function renderCompare(){
+  const n = S.noaa?.data?.latest, ins = S.noaa?.data?.insights;
+  const eps = ins?.episodios || [];
+  if (!n || !eps.length) { $('cmp-text').textContent = 'Datos de NOAA no disponibles por ahora.'; return; }
+  const rows = eps.map(e => ({name: e.nombre, v: e.pico_nino12})).concat([{name: 'Ahora', v: n.nino12, now: true}]);
+  const max = Math.max(...rows.map(r => r.v), 1);
+  $('bars').innerHTML = rows.map(r => `<div class="bar${r.now ? ' now' : ''}"><span>${r.name}</span><div class="t"><span data-w="${Math.max(0, r.v) / max * 100}"></span></div><span class="v">${r.v >= 0 ? '+' : '−'}${num(r.v)} °C</span></div>`).join('');
+  requestAnimationFrame(() => document.querySelectorAll('.bar .t span').forEach(s => s.style.width = s.dataset.w + '%'));
+  const p17 = eps.find(e => e.nombre === '2017')?.pico_nino12;
+  const above = eps.filter(e => n.nino12 > e.pico_nino12).map(e => e.nombre);
+  $('cmp-text').textContent = above.length === eps.length
+    ? `Esta semana el mar está más caliente que en el punto más alto de todos estos Niños, incluido el de 2017.`
+    : p17 != null && n.nino12 > p17
+      ? `Esta semana el mar ya está más caliente que en el punto más alto del Niño costero de 2017.`
+      : above.length ? `Esta semana el mar está más caliente que en el pico de ${above.join(' y ')}, pero no tanto como en otros Niños.`
+      : `Por ahora, el mar está menos caliente que en el punto más alto de estos Niños.`;
+}
+
+// ---------- what changed ----------
+function renderNew(){
+  const items = [], ins = S.noaa?.data?.insights, n = S.noaa?.data?.latest, of = S.oficial?.data;
+  if (n && ins) {
+    const d = ins.cambio_1_semana;
+    items.push(Math.abs(d) >= 0.1 ? `El mar frente al norte ${d > 0 ? 'subió' : 'bajó'} ${deg(d)} respecto a la semana pasada.` : 'La temperatura del mar se mantuvo igual que la semana pasada.');
+  }
+  if (of) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const pub = new Date(of.fecha + 'T00:00:00'), next = new Date(of.proximo_comunicado + 'T00:00:00');
+    const ago = (today - pub) / 864e5, until = (next - today) / 864e5;
+    if (ago <= 8) items.push(`ENFEN publicó su ${of.comunicado.replace('Comunicado Oficial ENFEN', 'comunicado')} el ${longDate(of.fecha)}.`);
+    if (until >= 0 && until <= 10) items.push(`El próximo comunicado oficial de ENFEN sale el ${dayDate(of.proximo_comunicado)}.`);
+  }
+  const evs = (S.gdacs?.data?.events || []).filter(e => e.climatico);
+  const recent = evs.filter(e => (Date.now() - new Date(e.date + 'T12:00:00')) / 864e5 <= 7);
+  if (recent.length) items.push(`Se ${recent.length === 1 ? 'registró' : 'registraron'} ${recent.length} ${recent.length === 1 ? 'evento' : 'eventos'} por clima en el país esta semana (${[...new Set(recent.map(e => e.type.toLowerCase()))].join(', ')}).`);
+  const top = (RAIN?.cities || []).slice().sort((a, b) => (b.total3?.p50 ?? b.rain_3d) - (a.total3?.p50 ?? a.rain_3d))[0];
+  if (top && (top.total3?.p50 ?? top.rain_3d) >= 1) items.push(`${top.name} es donde más lluvia se espera en los próximos tres días.`);
+  $('new').innerHTML = items.length ? items.map(t => `<li>${esc(t)}</li>`).join('') : '<li>Sin novedades importantes por ahora.</li>';
+}
+
+// ---------- FAQ (answers use the latest official text) ----------
+function renderFaq(){
+  const of = S.oficial?.data, n = S.noaa?.data?.latest, eps = S.noaa?.data?.insights?.episodios || [];
+  const p17 = eps.find(e => e.nombre === '2017')?.pico_nino12;
+  const cc = of?.lluvias?.costa_centro;
+  const qa = [
+    ['¿Qué es El Niño costero?', 'Es el calentamiento anormal del mar frente a la costa del Perú y Ecuador. Con el mar caliente se evapora más agua y pueden caer lluvias fuertes en la costa norte, que normalmente es seca. Es distinto de El Niño "global", que se mide en el centro del océano Pacífico, aunque a veces ocurren a la vez.'],
+    ['¿Llega a Lima?', (cc ? cc.texto + ' ' : '') + 'Con el mar caliente también suele hacer más calor y más humedad. En 2017, los huaicos afectaron zonas de Lima cercanas a los ríos.'],
+    ['¿Cuándo termina?', of ? `Según ENFEN (${of.comunicado}, del ${longDate(of.fecha)}), El Niño costero ${of.duracion}. ENFEN actualiza esta perspectiva en cada comunicado.` : 'ENFEN actualiza su perspectiva en cada comunicado oficial.'],
+    ['¿Será como el 2017?', (n && p17 != null ? (n.nino12 > p17 ? 'El mar ya está más caliente que en el peor momento de 2017. ' : 'Por ahora el mar está menos caliente que en el peor momento de 2017. ') : '') + 'Pero cuánto llueve no depende solo del mar: también influyen los vientos y otros factores. Por eso nadie puede asegurar hoy que se repita lo de 2017; ENFEN y SENAMHI evalúan el riesgo semana a semana.'],
+    ['¿Por qué una lluvia "moderada" puede causar tantos daños en la costa?', 'Porque la costa es un desierto: casas, techos, pistas y desagües no están hechos para la lluvia, y las quebradas secas se activan de golpe. Por eso aquí usamos umbrales más bajos para la costa que para la sierra o la selva.'],
+    ['¿Este sitio es oficial?', 'No. Es un monitor independiente de Grupo Evidencia que reúne datos públicos (NOAA, ENFEN, Open-Meteo, GDACS) y los explica en simple. La voz oficial es ENFEN para El Niño y SENAMHI para los avisos de lluvia.'],
+  ];
+  $('faq').innerHTML = qa.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');
+}
+
+function renderNews(){
+  const items = (S.news?.data?.items || []).slice(0, 3);
+  $('news').innerHTML = items.length ? items.map(x => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="meta">${esc(x.publisher)}${x.published ? ' · ' + new Date(x.published).toLocaleDateString('es-PE', {day:'numeric', month:'long'}) : ''}</div></li>`).join('')
+    : '<li class="meta">No pudimos cargar titulares en este momento.</li>';
+}
+
+function renderAll(){ renderStatus(); renderHero(); renderAnswers(); renderCompare(); renderNew(); renderFaq(); renderNews(); }
 
 async function load(){
-  $('updated').textContent = 'Actualizando…';
   try {
-    const r = await fetch('/api/status', {cache:'no-store'});
-    if (!r.ok) throw Error('HTTP ' + r.status);
-    const j = await r.json();
-    dataset = j.sources || {};
+    const [st, rn] = await Promise.all([
+      fetch('/api/status', {cache:'no-store'}).then(r => r.json()),
+      fetch('/api/rain-map', {cache:'no-store'}).then(r => r.json()).catch(() => null)]);
+    S = st.sources || {}; RAIN = rn?.data || null;
+    $('updated').textContent = 'Actualizado: ' + new Date(st.server_time).toLocaleString('es-PE', {timeZone:'America/Lima', dateStyle:'medium', timeStyle:'short'});
+  } catch(e) { $('updated').textContent = 'No se pudieron cargar los datos. Vuelve a intentar en un minuto.'; }
+  renderAll();
+}
 
-    const n = dataset.noaa?.data?.latest;
-    if (n){ setIndex('n12', n.nino12, n.date, class12); setIndex('n34', n.nino34, n.date, class34); }
-    else for (const k of ['n12','n34']){ $(k).textContent = '—'; $(k+'chip').textContent = 'Sin datos'; $(k+'plain').textContent = 'NOAA no respondió. Vuelve a intentar más tarde.'; }
-    plot();
-
-    const e = dataset.enfen?.data?.items?.[0];
-    $('enfen').textContent = e ? e.title : 'No disponible';
-    if (e) $('enfen-link').href = e.url;
-
-    const nl = $('news'); nl.replaceChildren();
-    const news = dataset.news?.data?.items || [];
-    if (news.length) for (const x of news) nl.append(row(x.title, x.url, [x.publisher, x.published ? new Date(x.published).toLocaleDateString('es-PE') : ''].filter(Boolean).join(' · ')));
-    else nl.textContent = 'No se pudieron cargar titulares en este momento.';
-
-    const evs = dataset.gdacs?.data?.events || [];
-    const gOk = dataset.gdacs?.status === 'ok' || dataset.gdacs?.data;
-    $('dcount').textContent = gOk ? evs.length : '—';
-    $('dmeta').textContent = gOk ? 'Eventos registrados por GDACS en Perú y su costa en los últimos 60 días.' : 'GDACS no respondió: no se puede mostrar el número de eventos.';
-    const dl = $('dlist'); dl.replaceChildren();
-    for (const x of evs.slice(0, 4)) dl.append(row(`${x.type} · ${fmtDate(x.date)}`, x.url, x.detail || x.name));
-    const ind = dataset.indeci?.data?.latest_record;
-    $('indeci-note').textContent = ind
-      ? `INDECI (registro nacional de emergencias) publica su base de datos geográfica con retraso: su registro público más reciente es del ${fmtDate(ind)}. Por eso no se usa aquí para contar emergencias actuales.`
-      : 'La base de datos pública de INDECI no respondió.';
-    drawEvents();
-    buildHero();
-
-    const names = {noaa:'NOAA · mar', enfen:'ENFEN', gdacs:'GDACS · desastres', indeci:'INDECI', news:'Noticias'};
-    const h = $('health'); h.replaceChildren();
-    for (const [k, title] of Object.entries(names)){
-      const v = dataset[k] || {}, d = document.createElement('div'); d.className = 'row';
-      d.innerHTML = `<b>${esc(title)}</b><div class="source">${v.status === 'ok' ? '✓ Funcionando' : (v.stale ? '⚠ Mostrando datos anteriores' : '✗ No responde')}</div>`;
-      h.append(d);
+$('city').addEventListener('change', e => { city = e.target.value; store.set('monitor.city', city); renderAll(); });
+$('geo').addEventListener('click', () => {
+  if (!navigator.geolocation) return;
+  $('geo').textContent = 'Buscando…';
+  navigator.geolocation.getCurrentPosition(p => {
+    const list = RAIN?.cities || [];
+    if (list.length) {
+      const near = list.reduce((a, c) => ((c.lat - p.coords.latitude) ** 2 + (c.lon - p.coords.longitude) ** 2) < ((a.lat - p.coords.latitude) ** 2 + (a.lon - p.coords.longitude) ** 2) ? c : a);
+      city = near.id; $('city').value = city; store.set('monitor.city', city); renderAll();
     }
-    $('updated').textContent = 'Actualizado: ' + new Date(j.server_time).toLocaleString('es-PE', {timeZone:'America/Lima', dateStyle:'short', timeStyle:'short'});
-  } catch(e){
-    $('updated').textContent = 'Error al consultar datos';
+    $('geo').textContent = '📍 Usar mi ubicación';
+  }, () => { $('geo').textContent = '📍 Usar mi ubicación'; }, {timeout: 10000, maximumAge: 3600000});
+});
+
+// ---------- shareable image (1080×1350) ----------
+function wrap(ctx, text, maxW){ const words = text.split(' '), lines = []; let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines; }
+$('img').addEventListener('click', async () => {
+  try { await document.fonts.ready; } catch(e) {}
+  const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1350;
+  const x = cv.getContext('2d'), W = 1080, P = 90;
+  x.fillStyle = '#faf7f2'; x.fillRect(0, 0, W, 1350);
+  x.fillStyle = '#b8322a'; x.fillRect(0, 0, W, 16);
+  x.fillStyle = '#1b1d22'; x.font = '700 46px "Source Serif 4", Georgia, serif'; x.fillText('Monitor El Niño', P, 140);
+  x.fillStyle = '#5d6470'; x.font = '600 26px Inter, sans-serif'; x.fillText('GRUPO EVIDENCIA', P, 182);
+  x.fillStyle = '#b8322a'; x.font = '800 28px Inter, sans-serif'; x.fillText($('kicker').textContent.toUpperCase(), P, 300);
+  x.fillStyle = '#1b1d22'; x.font = '700 76px "Source Serif 4", Georgia, serif';
+  let y = 400; for (const l of wrap(x, $('headline').textContent, W - 2 * P).slice(0, 6)) { x.fillText(l, P, y); y += 88; }
+  const st = window.STATUS, c = cityData();
+  if (st && c) {
+    y += 40; x.fillStyle = '#ffffff'; x.strokeStyle = '#e6e0d6'; x.lineWidth = 2;
+    x.beginPath(); x.roundRect ? x.roundRect(P, y, W - 2 * P, 150, 24) : x.rect(P, y, W - 2 * P, 150); x.fill(); x.stroke();
+    x.fillStyle = getComputedStyle(document.body).getPropertyValue(st.color.replace(/var\(|\)/g, '')) || '#b7791f';
+    x.beginPath(); x.arc(P + 60, y + 75, 22, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#1b1d22'; x.font = '800 48px Inter, sans-serif'; x.fillText(`${c.name}: ${st.state}`, P + 110, y + 92);
   }
-}
+  x.fillStyle = '#5d6470'; x.font = '500 28px Inter, sans-serif';
+  x.fillText('Datos: NOAA · ENFEN · Open-Meteo. No es un pronóstico oficial.', P, 1220);
+  x.fillStyle = '#1d5f8a'; x.font = '700 32px Inter, sans-serif'; x.fillText(location.host, P, 1272);
+  cv.toBlob(async blob => {
+    const file = new File([blob], 'monitor-el-nino.png', {type: 'image/png'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      try { await navigator.share({files: [file], title: 'Monitor El Niño'}); return; } catch(e) { if (e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'monitor-el-nino.png'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }, 'image/png');
+});
 
-async function forecast(pan){
-  const r = $('region').value, box = $('forecast');
-  box.textContent = 'Consultando…';
-  const m = cityMarkers[r];
-  if (m && pan){ map.setView(m.getLatLng(), 7); m.openTooltip(); }
-  try {
-    const res = await fetch('/api/forecast?region=' + encodeURIComponent(r), {cache:'no-store'});
-    const j = await res.json();
-    const d = j.data?.daily;
-    if (!d) throw Error(j.error || 'sin respuesta');
-    box.replaceChildren();
-    const days = ['dom','lun','mar','mié','jue','vie','sáb'];
-    d.time.forEach((date, i) => {
-      const div = document.createElement('div'); div.className = 'day';
-      const dt = new Date(date + 'T12:00:00');
-      const mm = d.precipitation_sum?.[i];
-      div.innerHTML = `<span>${days[dt.getDay()]} ${dt.getDate()}</span><b>${mm ?? '—'}<small style="font-weight:400;font-size:10px"> mm</small></b><span>${Math.round(d.temperature_2m_min?.[i])}–${Math.round(d.temperature_2m_max?.[i])}°</span>`;
-      box.append(div);
-    });
-    $('forecast-caption').textContent = `${j.data.name}: lluvia diaria esperada (mm) y temperatura mínima–máxima. Pronóstico de modelo (Open-Meteo), no observación.`;
-  } catch(e){ box.textContent = 'Pronóstico no disponible: ' + e.message; }
-}
-
-$('refresh').addEventListener('click', () => { load(); loadRain(); forecast(); });
-$('region').addEventListener('change', () => forecast(true));
-for (const [id, key] of [['chart12','nino12'],['chart34','nino34']])
-  $(id).addEventListener('click', () => { chart = key; $('chart12').setAttribute('aria-pressed', String(key==='nino12')); $('chart34').setAttribute('aria-pressed', String(key==='nino34')); plot(); });
-
-mapStatus();
 load();
-loadRain().then(() => { const m = cityMarkers[$('region').value]; if (m) m.openTooltip(); });
-forecast();
-setInterval(load, 15 * 60 * 1000);
+setInterval(load, 30 * 60 * 1000);
 </script>
 </body>
 </html>

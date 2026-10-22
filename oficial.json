@@ -1,0 +1,35 @@
+{
+  "_instrucciones": "Datos transcritos a mano del último comunicado oficial de ENFEN. Cuando salga un comunicado nuevo, actualiza estos campos y súbelo a GitHub. No inventar: copiar lo que dice ENFEN.",
+  "comunicado": "Comunicado Oficial ENFEN N° 18-2026",
+  "fecha": "2026-10-16",
+  "url": "https://enfen.imarpe.gob.pe/download/comunicado-oficial-enfen-n-18-2026/",
+  "estado_alerta": "Alerta de El Niño costero",
+  "magnitud_costa": "extraordinaria",
+  "magnitud_costa_hasta": "enero de 2027",
+  "magnitud_costa_despues": "fuerte",
+  "magnitud_pacifico_central": "muy fuerte hasta febrero de 2027",
+  "duracion": "se extendería hasta el otoño de 2027, con una reducción gradual de su intensidad",
+  "proximo_comunicado": "2026-10-30",
+  "lluvias": {
+    "costa_norte": {
+      "nivel": "sobre lo normal",
+      "texto": "ENFEN prevé lluvias por encima de lo normal en la costa norte en lo que queda de 2026 y en el verano de 2027, con posibles lluvias localizadas de moderadas a fuertes."
+    },
+    "costa_centro": {
+      "nivel": "sobre lo normal",
+      "texto": "ENFEN prevé lluvias por encima de lo normal en la costa central en lo que queda de 2026 y en el verano de 2027."
+    },
+    "sierra_centro": {
+      "nivel": "sin señal",
+      "texto": "El comunicado no incluye a la sierra central entre las zonas con lluvias por encima de lo normal."
+    },
+    "sierra_sur": {
+      "nivel": "normal o menos",
+      "texto": "ENFEN prevé lluvias normales o por debajo de lo normal en la sierra sur."
+    },
+    "amazonia": {
+      "nivel": "normal o menos",
+      "texto": "ENFEN prevé lluvias normales o por debajo de lo normal en la Amazonía en lo que queda de 2026."
+    }
+  }
+}

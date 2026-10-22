@@ -1,4 +1,4 @@
-"""MCP server for Observatorio El Niño · Perú.
+"""MCP server for Monitor El Niño · Grupo Evidencia.
 
 Streamable HTTP endpoint at POST /mcp, no external dependencies.
 Dual-era (see https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning):
@@ -14,13 +14,14 @@ MODERN = ['2026-07-28']
 LEGACY = ['2025-11-25', '2025-06-18', '2025-03-26']
 META_VER = 'io.modelcontextprotocol/protocolVersion'
 META_SERVER = 'io.modelcontextprotocol/serverInfo'
-SERVER_INFO = {'name': 'observatorio-nino-peru', 'title': 'Observatorio El Niño · Perú', 'version': '1.7'}
+SERVER_INFO = {'name': 'monitor-el-nino', 'title': 'Monitor El Niño · Grupo Evidencia', 'version': '2.0'}
 INSTRUCTIONS = (
-    'Datos públicos sobre El Niño y el clima en el Perú, reunidos por el Observatorio El Niño · Perú '
-    '(Grupo Evidencia y MNRY). Fuentes: NOAA CPC (anomalías semanales de temperatura del mar, base 1991–2020), '
-    'Open-Meteo (pronóstico de modelo, no observación), GDACS (desastres con impacto relevante, no exhaustivo) '
-    'y ENFEN (comunicados oficiales). La etiqueta de categoría aplica la escala ICEN de ENFEN al dato semanal: '
-    'es una señal temprana, no la clasificación oficial. Cita siempre la fuente y la fecha de cada dato. '
+    'Datos públicos sobre El Niño y el clima en el Perú, reunidos por el Monitor El Niño (Grupo Evidencia, con MNRY). '
+    'Es un monitor de datos, no un servicio de pronóstico. Fuentes: NOAA CPC (anomalías semanales de temperatura del mar, base 1991–2020), '
+    'ENFEN (comunicados oficiales; su perspectiva es la única voz oficial sobre lo que viene), '
+    'Open-Meteo (pronóstico de modelo y ensambles ECMWF, no observación ni aviso de SENAMHI) y GDACS (desastres con impacto relevante, no exhaustivo). '
+    'La etiqueta de categoría semanal aplica la escala ICEN de ENFEN al dato semanal: es una señal temprana, no la clasificación oficial. '
+    'Para hablar del futuro, usa perspectiva_oficial_enfen. Cita siempre la fuente y la fecha de cada dato. '
     'El servidor gratuito puede tardar ~1 minuto en responder la primera vez si estaba en reposo.'
 )
 
@@ -114,9 +115,16 @@ def t_pronostico(args):
         raise ToolError('Ciudad no disponible. Opciones: ' + ', '.join(a.REGIONS))
     d, checked, note = _source('forecast:' + ciudad, lambda: a.get_forecast(ciudad), 'forecast')
     dd = d['daily']
+    ens = a.cached('ens', a.get_ensemble, a.TTL['ens'])
+    rng = {x['fecha']: x for x in ((ens.get('data') or {}).get('ciudades') or {}).get(ciudad, {}).get('dias', [])}
     dias = [{'fecha': t, 'lluvia_mm': dd['precipitation_sum'][i], 'temp_min_c': dd['temperature_2m_min'][i],
-             'temp_max_c': dd['temperature_2m_max'][i]} for i, t in enumerate(dd['time'])]
-    out = {'ciudad': d['name'], 'dias': dias, 'tipo': 'pronóstico de modelo, no observación', 'fuente': 'Open-Meteo', 'consultado': checked}
+             'temp_max_c': dd['temperature_2m_max'][i],
+             'lluvia_rango_mm': ({'p10': rng[t]['p10'], 'p50': rng[t]['p50'], 'p90': rng[t]['p90']} if t in rng else None)}
+            for i, t in enumerate(dd['time'])]
+    out = {'ciudad': d['name'], 'dias': dias, 'tipo': 'pronóstico de modelo, no observación',
+           'rangos': 'percentiles 10/50/90 del ensamble ECMWF (51 escenarios)' if rng else 'no disponibles',
+           'fuente': 'Open-Meteo', 'consultado': checked,
+           'aviso': 'Para decisiones, consultar los avisos oficiales de SENAMHI.'}
     total = round(sum(x['lluvia_mm'] or 0 for x in dias), 1)
     txt = f"Pronóstico 7 días para {d['name']}{note}: {total} mm de lluvia en total. Fuente: Open-Meteo (modelo)."
     return txt, out
@@ -137,9 +145,11 @@ def t_emergencias(args):
     tipo = args.get('tipo')
     if tipo:
         evs = [e for e in evs if e['type'].lower() == str(tipo).lower()]
+    elif args.get('solo_climaticos', True):
+        evs = [e for e in evs if e.get('climatico')]
     out = {'dias': d.get('days', 60), 'total': len(evs),
            'eventos': [{'tipo': e['type'], 'fecha': e['date'], 'alerta': e['alert'], 'detalle': e['detail'] or e['name'],
-                        'lat': e['lat'], 'lon': e['lon'], 'informe': e['url']} for e in evs],
+                        'climatico': e.get('climatico'), 'lat': e['lat'], 'lon': e['lon'], 'informe': e['url']} for e in evs],
            'nota': 'GDACS registra eventos de impacto relevante; no incluye cada emergencia local.',
            'fuente': 'GDACS (ONU / Comisión Europea)', 'consultado': checked}
     n = len(evs)
@@ -151,6 +161,18 @@ def t_enfen():
     items = d['items'][:5]
     out = {'comunicados': [{'titulo': i['title'], 'url': i['url']} for i in items], 'fuente': 'ENFEN', 'consultado': checked}
     return f"Comunicado más reciente detectado: {items[0]['title']}{note}. Para el diagnóstico oficial, lee el documento enlazado.", out
+
+def t_oficial():
+    a = _app()
+    res = a.get_oficial()
+    if res['status'] != 'ok':
+        raise ToolError('No se pudo leer la perspectiva oficial: ' + res.get('error', ''))
+    o = {k: v for k, v in res['data'].items() if not k.startswith('_')}
+    txt = (f"{o.get('comunicado')} ({o.get('fecha')}): {o.get('estado_alerta')}. Magnitud prevista en la costa: "
+           f"{o.get('magnitud_costa')} hasta {o.get('magnitud_costa_hasta')}; El Niño costero {o.get('duracion')}. "
+           f"Próximo comunicado: {o.get('proximo_comunicado')}. Texto transcrito a mano del comunicado oficial.")
+    o['nota'] = 'Transcrito a mano del comunicado oficial de ENFEN; verificar en la fuente.'
+    return txt, o
 
 RO = {'readOnlyHint': True, 'destructiveHint': False, 'idempotentHint': True, 'openWorldHint': True}
 NO_ARGS = {'type': 'object', 'additionalProperties': False}
@@ -169,16 +191,20 @@ def tool_defs():
              'hasta': {'type': 'string', 'format': 'date', 'description': 'Fecha final AAAA-MM-DD (opcional)'}},
              'additionalProperties': False},
          'annotations': RO, 'run': t_serie},
+        {'name': 'perspectiva_oficial_enfen', 'title': 'Perspectiva oficial de ENFEN',
+         'description': 'Lo que dice el último comunicado oficial de ENFEN: estado de alerta, magnitud prevista, duración, lluvias esperadas por zona y fecha del próximo comunicado. Es la referencia oficial sobre lo que viene.',
+         'inputSchema': NO_ARGS, 'annotations': {**RO, 'openWorldHint': False}, 'run': lambda args: t_oficial()},
         {'name': 'pronostico_ciudad', 'title': 'Pronóstico de 7 días por ciudad',
-         'description': 'Lluvia diaria (mm) y temperatura mínima/máxima de los próximos 7 días para una ciudad del Perú. Pronóstico de modelo (Open-Meteo), no observación ni aviso oficial de SENAMHI.',
+         'description': 'Lluvia diaria (mm) con rango de escenarios (percentiles 10/50/90 del ensamble ECMWF) y temperatura mínima/máxima de los próximos 7 días para una ciudad del Perú. Pronóstico de modelo, no observación ni aviso oficial de SENAMHI.',
          'inputSchema': {'type': 'object', 'properties': {'ciudad': {'type': 'string', 'enum': cities}}, 'required': ['ciudad'], 'additionalProperties': False},
          'annotations': RO, 'run': t_pronostico},
         {'name': 'lluvia_esperada_ciudades', 'title': 'Lluvia esperada en 3 días (todas las ciudades)',
-         'description': 'Lluvia total pronosticada para los próximos 3 días en las 12 ciudades del observatorio, ordenadas de mayor a menor. Fuente: Open-Meteo.',
+         'description': 'Lluvia total pronosticada para los próximos 3 días en las 12 ciudades del monitor, ordenadas de mayor a menor. Fuente: Open-Meteo.',
          'inputSchema': NO_ARGS, 'annotations': RO, 'run': lambda args: t_lluvia()},
         {'name': 'emergencias_recientes', 'title': 'Emergencias y desastres recientes en el Perú',
-         'description': 'Eventos registrados por GDACS en el Perú y su costa en los últimos 60 días (sismos, inundaciones, incendios forestales, etc.). No es exhaustivo: GDACS solo registra eventos de impacto relevante.',
-         'inputSchema': {'type': 'object', 'properties': {'tipo': {'type': 'string', 'enum': ['Sismo', 'Inundación', 'Ciclón tropical', 'Volcán', 'Sequía', 'Incendio forestal'], 'description': 'Filtrar por tipo (opcional)'}}, 'additionalProperties': False},
+         'description': 'Eventos registrados por GDACS en el Perú y su costa en los últimos 60 días. Por defecto solo los relacionados con el clima (inundaciones, sequías, incendios, ciclones); sismos y volcanes con solo_climaticos=false o filtrando por tipo. No es exhaustivo: GDACS solo registra eventos de impacto relevante.',
+         'inputSchema': {'type': 'object', 'properties': {'tipo': {'type': 'string', 'enum': ['Sismo', 'Inundación', 'Ciclón tropical', 'Volcán', 'Sequía', 'Incendio forestal'], 'description': 'Filtrar por tipo (opcional)'},
+                                                          'solo_climaticos': {'type': 'boolean', 'default': True, 'description': 'Solo eventos relacionados con el clima (por defecto true)'}}, 'additionalProperties': False},
          'annotations': RO, 'run': t_emergencias},
         {'name': 'comunicados_enfen', 'title': 'Comunicados oficiales de ENFEN',
          'description': 'Títulos y enlaces de los comunicados oficiales más recientes de ENFEN, la comisión peruana que declara oficialmente El Niño costero.',

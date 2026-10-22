@@ -3,7 +3,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-VERSION = '1.8'
+VERSION = '2.0'
+BRAND = 'Monitor El Niño · Grupo Evidencia'
 BASE = Path(__file__).resolve().parent
 
 URLS = {
@@ -12,24 +13,32 @@ URLS = {
     'indeci': 'https://geosinpad.indeci.gob.pe/indeci/rest/services/Emergencias/EMERGENCIAS_SINPAD/MapServer/0/query',
     'gdacs': 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH',
     'forecast': 'https://api.open-meteo.com/v1/forecast',
+    'ensemble': 'https://ensemble-api.open-meteo.com/v1/ensemble',
 }
-TTL = {'enfen': 3600, 'noaa': 21600, 'indeci': 21600, 'gdacs': 1800, 'news': 3600, 'forecast': 3600, 'rain': 3600}
+TTL = {'enfen': 3600, 'noaa': 21600, 'indeci': 21600, 'gdacs': 1800, 'news': 3600,
+       'forecast': 3600, 'rain': 3600, 'ens': 10800}
 
-# name, lat, lon
+# id: (name, lat, lon, zone)
 REGIONS = {
-    'tumbes': ('Tumbes', -3.57, -80.46),
-    'piura': ('Piura', -5.19, -80.63),
-    'chiclayo': ('Chiclayo', -6.77, -79.84),
-    'trujillo': ('Trujillo', -8.11, -79.03),
-    'chimbote': ('Chimbote', -9.07, -78.59),
-    'lima': ('Lima', -12.05, -77.04),
-    'ica': ('Ica', -14.07, -75.73),
-    'arequipa': ('Arequipa', -16.40, -71.54),
-    'huancayo': ('Huancayo', -12.07, -75.21),
-    'cusco': ('Cusco', -13.53, -71.97),
-    'puno': ('Puno', -15.84, -70.02),
-    'iquitos': ('Iquitos', -3.75, -73.25),
+    'tumbes': ('Tumbes', -3.57, -80.46, 'costa_norte'),
+    'piura': ('Piura', -5.19, -80.63, 'costa_norte'),
+    'chiclayo': ('Chiclayo', -6.77, -79.84, 'costa_norte'),
+    'trujillo': ('Trujillo', -8.11, -79.03, 'costa_norte'),
+    'chimbote': ('Chimbote', -9.07, -78.59, 'costa_centro'),
+    'lima': ('Lima', -12.05, -77.04, 'costa_centro'),
+    'ica': ('Ica', -14.07, -75.73, 'costa_centro'),
+    'arequipa': ('Arequipa', -16.40, -71.54, 'sierra_sur'),
+    'huancayo': ('Huancayo', -12.07, -75.21, 'sierra_centro'),
+    'cusco': ('Cusco', -13.53, -71.97, 'sierra_sur'),
+    'puno': ('Puno', -15.84, -70.02, 'sierra_sur'),
+    'iquitos': ('Iquitos', -3.75, -73.25, 'amazonia'),
 }
+ZONES = {'costa_norte': 'Costa norte', 'costa_centro': 'Costa centro', 'sierra_centro': 'Sierra centro',
+         'sierra_sur': 'Sierra sur', 'amazonia': 'Amazonía'}
+
+# Large past El Niño events used for comparison (windows around the Niño 1+2 peak)
+EPISODES = [('1983', '1982-09-01', '1983-08-31'), ('1998', '1997-04-01', '1998-08-31'),
+            ('2017', '2017-01-01', '2017-06-30'), ('2023', '2023-02-01', '2024-03-31')]
 
 CACHE = {}
 LOCK = threading.RLock()
@@ -37,7 +46,7 @@ LOCK = threading.RLock()
 
 def fetch(url, limit=3_000_000, timeout=15):
     req = urllib.request.Request(url, headers={
-        'User-Agent': 'ObservatorioNinoPeru/' + VERSION + ' (public data monitoring)',
+        'User-Agent': 'MonitorElNino/' + VERSION + ' (public data monitoring; Grupo Evidencia)',
         'Accept': 'application/json,text/plain,text/html,application/xml,*/*'})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read(limit)
@@ -63,6 +72,27 @@ def cached(key, loader, ttl):
     return result
 
 
+def percentile(vals, q):
+    s = sorted(vals)
+    if not s:
+        return None
+    k = (len(s) - 1) * q
+    lo, hi = int(k), min(int(k) + 1, len(s) - 1)
+    return round(s[lo] + (s[hi] - s[lo]) * (k - lo), 1)
+
+
+# ---------------------------------------------------------------- official data (hand-transcribed)
+def get_oficial():
+    """ENFEN statements transcribed by hand into oficial.json (edit that file when a new communiqué comes out)."""
+    try:
+        with open(BASE / 'oficial.json', encoding='utf-8') as f:
+            data = json.load(f)
+        return {'status': 'ok', 'data': data}
+    except Exception as e:
+        return {'status': 'error', 'error': 'oficial.json: ' + str(e)[:160]}
+
+
+# ---------------------------------------------------------------- ENFEN communiqué list
 def get_enfen():
     page = fetch(URLS['enfen']).decode('utf-8', 'replace')
     out = []
@@ -81,6 +111,7 @@ def get_enfen():
     return {'items': out[:12], 'source_url': URLS['enfen']}
 
 
+# ---------------------------------------------------------------- NOAA weekly sea temperature
 def get_noaa():
     raw = fetch(URLS['noaa'], limit=2_000_000, timeout=20)
     rows = []
@@ -101,7 +132,8 @@ def get_noaa():
     if not rows:
         raise ValueError('NOAA respondió pero no se reconocieron datos semanales')
     rows.sort(key=lambda x: x['date'])
-    return {'series': rows[-52:], 'latest': rows[-1], 'all': rows, 'insights': noaa_insights(rows), 'source_url': URLS['noaa']}
+    return {'series': rows[-52:], 'latest': rows[-1], 'all': rows, 'insights': noaa_insights(rows),
+            'source_url': URLS['noaa']}
 
 
 def class12(v):
@@ -114,8 +146,18 @@ def class12(v):
     return 'frío'
 
 
+def episode_peaks(rows):
+    out = []
+    for name, a, b in EPISODES:
+        win = [r for r in rows if a <= r['date'] <= b]
+        if win:
+            pk = max(win, key=lambda r: r['nino12'])
+            out.append({'nombre': name, 'pico_nino12': pk['nino12'], 'semana': pk['date']})
+    return out
+
+
 def noaa_insights(rows):
-    """Facts the page uses to write its headline: streaks, changes and records (Niño 1+2)."""
+    """Facts the pages use to write headlines: streaks, changes, records and past events (Niño 1+2)."""
     v = [r['nino12'] for r in rows]
     cur, cat = v[-1], class12(v[-1])
     streak = 0
@@ -137,11 +179,24 @@ def noaa_insights(rows):
         'igual_o_mayor_desde': higher_since,          # None = highest of the whole series
         'serie_desde': rows[0]['date'],
         'nino34': rows[-1]['nino34'],
+        'episodios': episode_peaks(rows),
     }
 
 
+def get_historia():
+    """Niño 1+2 weekly anomaly per year, for the 'every year since 1981' chart."""
+    noaa = cached('noaa', get_noaa, TTL['noaa'])
+    if not noaa.get('data'):
+        raise ValueError(noaa.get('error', 'NOAA no disponible'))
+    years = {}
+    for r in noaa['data']['all']:
+        d = datetime.strptime(r['date'], '%Y-%m-%d')
+        years.setdefault(d.year, []).append([d.timetuple().tm_yday, r['nino12']])
+    return {'anios': years, 'episodios': noaa['data']['insights']['episodios'], 'fuente': 'NOAA CPC'}
+
+
+# ---------------------------------------------------------------- INDECI (stale public layer: report its date only)
 def get_indeci_latest():
-    # INDECI's public GIS layer is not updated continuously; report the date of its newest record.
     params = {'where': '1=1', 'outFields': 'FECHA', 'orderByFields': 'FECHA DESC',
               'resultRecordCount': '1', 'returnGeometry': 'false', 'f': 'json'}
     obj = json.loads(fetch(URLS['indeci'] + '?' + urllib.parse.urlencode(params), timeout=20))
@@ -156,8 +211,14 @@ def get_indeci_latest():
             'source_url': 'https://portal.indeci.gob.pe/'}
 
 
+# ---------------------------------------------------------------- GDACS events
 GDACS_TYPES = {'EQ': 'Sismo', 'FL': 'Inundación', 'TC': 'Ciclón tropical', 'VO': 'Volcán',
                'DR': 'Sequía', 'WF': 'Incendio forestal', 'TS': 'Tsunami'}
+CLIMATE_CODES = {'FL', 'DR', 'WF', 'TC'}   # weather/climate-related; earthquakes and volcanoes are not El Niño
+
+
+def nearest_city(lat, lon):
+    return min(REGIONS, key=lambda k: (REGIONS[k][1] - lat) ** 2 + (REGIONS[k][2] - lon) ** 2)
 
 
 def get_gdacs():
@@ -175,20 +236,21 @@ def get_gdacs():
             continue
         sev = p.get('severitydata') or {}
         report = (p.get('url') or {}).get('report') or 'https://www.gdacs.org/'
+        code = p.get('eventtype')
+        city = nearest_city(coords[1], coords[0])
         events.append({
-            'type': GDACS_TYPES.get(p.get('eventtype'), p.get('eventtype') or 'Evento'),
-            'code': p.get('eventtype'),
-            'name': p.get('name') or '',
-            'alert': (p.get('alertlevel') or '').lower(),
-            'date': (p.get('fromdate') or '')[:10],
-            'detail': sev.get('severitytext') or '',
-            'lon': coords[0], 'lat': coords[1],
+            'type': GDACS_TYPES.get(code, code or 'Evento'), 'code': code,
+            'climatico': code in CLIMATE_CODES,
+            'name': p.get('name') or '', 'alert': (p.get('alertlevel') or '').lower(),
+            'date': (p.get('fromdate') or '')[:10], 'detail': sev.get('severitytext') or '',
+            'lon': coords[0], 'lat': coords[1], 'zona': REGIONS[city][3],
             'url': report if report.startswith('https://') else 'https://www.gdacs.org/',
         })
     events.sort(key=lambda e: e['date'], reverse=True)
     return {'events': events, 'days': 60, 'source_url': 'https://www.gdacs.org/'}
 
 
+# ---------------------------------------------------------------- news
 def get_news():
     q = urllib.parse.quote('fenómeno El Niño Perú lluvias SENAMHI ENFEN when:14d')
     url = 'https://news.google.com/rss/search?q=' + q + '&hl=es-419&gl=PE&ceid=PE:es-419'
@@ -209,15 +271,53 @@ def get_news():
     return {'items': items[:7]}
 
 
+# ---------------------------------------------------------------- forecasts
 def get_forecast(region):
-    name, lat, lon = REGIONS[region]
+    name, lat, lon, zone = REGIONS[region]
     params = {'latitude': lat, 'longitude': lon,
               'daily': 'precipitation_sum,temperature_2m_max,temperature_2m_min',
               'timezone': 'America/Lima', 'forecast_days': 7}
     d = json.loads(fetch(URLS['forecast'] + '?' + urllib.parse.urlencode(params))).get('daily', {})
     if not d.get('time'):
         raise ValueError('Pronóstico no disponible')
-    return {'region': region, 'name': name, 'daily': d}
+    return {'region': region, 'name': name, 'zona': zone, 'daily': d}
+
+
+def get_ensemble():
+    """ECMWF ensemble (51 members) via Open-Meteo: rain ranges per city and day, plus 3-day totals."""
+    keys = list(REGIONS)
+    params = {'latitude': ','.join(str(REGIONS[k][1]) for k in keys),
+              'longitude': ','.join(str(REGIONS[k][2]) for k in keys),
+              'daily': 'precipitation_sum', 'timezone': 'America/Lima', 'forecast_days': 7,
+              'models': 'ecmwf_ifs025'}
+    data = json.loads(fetch(URLS['ensemble'] + '?' + urllib.parse.urlencode(params), limit=8_000_000, timeout=25))
+    if isinstance(data, dict):
+        if data.get('error'):
+            raise ValueError('Open-Meteo: ' + str(data.get('reason', 'error'))[:120])
+        data = [data]
+    if len(data) != len(keys):
+        raise ValueError('Respuesta incompleta del servicio de ensambles')
+    out = {}
+    for k, loc in zip(keys, data):
+        d = loc.get('daily') or {}
+        times = d.get('time') or []
+        members = [v for name, v in d.items() if name.startswith('precipitation_sum') and isinstance(v, list)]
+        if not times or not members:
+            continue
+        days = []
+        for i, t in enumerate(times):
+            vals = [m[i] for m in members if i < len(m) and isinstance(m[i], (int, float))]
+            days.append({'fecha': t, 'p10': percentile(vals, .1), 'p50': percentile(vals, .5),
+                         'p90': percentile(vals, .9)})
+        totals = [sum(x for x in m[:3] if isinstance(x, (int, float))) for m in members]
+        out[k] = {'dias': days, 'total3': {'p10': percentile(totals, .1), 'p50': percentile(totals, .5),
+                                           'p90': percentile(totals, .9)},
+                  'max_dia3': {'p50': max((x['p50'] or 0) for x in days[:3]),
+                               'p90': max((x['p90'] or 0) for x in days[:3])},
+                  'miembros': len(members)}
+    if not out:
+        raise ValueError('Sin datos de ensambles')
+    return {'ciudades': out, 'modelo': 'ECMWF IFS ensamble (Open-Meteo)', 'percentiles': 'p10 / p50 / p90'}
 
 
 def get_rain_map():
@@ -245,10 +345,38 @@ def get_rain_map():
     for k, vals in zip(keys, dailies):
         if vals is None:
             continue
-        name, lat, lon = REGIONS[k]
+        name, lat, lon, zone = REGIONS[k]
         nums = [v for v in vals if isinstance(v, (int, float))]
-        out.append({'id': k, 'name': name, 'lat': lat, 'lon': lon, 'rain_3d': round(sum(nums), 1)})
+        out.append({'id': k, 'name': name, 'lat': lat, 'lon': lon, 'zona': zone,
+                    'rain_3d': round(sum(nums), 1), 'max_dia': round(max(nums), 1) if nums else 0})
     return {'cities': out, 'days': 3}
+
+
+def rain_with_ranges():
+    rain = cached('rain', get_rain_map, TTL['rain'])
+    ens = cached('ens', get_ensemble, TTL['ens'])
+    result = dict(rain)
+    if rain.get('data'):
+        cities = []
+        e = (ens.get('data') or {}).get('ciudades', {})
+        for c in rain['data']['cities']:
+            c = dict(c)
+            if c['id'] in e:
+                c['total3'] = e[c['id']]['total3']
+                c['max_dia3'] = e[c['id']]['max_dia3']
+            cities.append(c)
+        result['data'] = {**rain['data'], 'cities': cities, 'zonas': ZONES,
+                          'rangos': ens['status'] == 'ok' or bool(ens.get('data')),
+                          'modelo_rangos': (ens.get('data') or {}).get('modelo')}
+    return result
+
+
+# ---------------------------------------------------------------- CSV
+def csv_text(rows, cols):
+    def cell(v):
+        s = '' if v is None else str(v)
+        return '"' + s.replace('"', '""') + '"' if any(c in s for c in ',"\n') else s
+    return '\n'.join([','.join(cols)] + [','.join(cell(r.get(c)) for c in cols) for r in rows]) + '\n'
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -264,16 +392,25 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
+    def send_csv(self, text, filename):
+        raw = ('﻿' + text).encode('utf-8')   # BOM so Excel opens accents correctly
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/csv; charset=utf-8')
+        self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+        self.send_header('Content-Length', str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
     MCP_405 = ('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-               '<title>Servidor MCP · Observatorio El Niño · Perú</title>'
+               '<title>Servidor MCP · Monitor El Niño</title>'
                '<body style="font:16px/1.6 system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 18px;background:#0b1522;color:#eef4fb">'
-               '<h1 style="font-size:22px">Servidor MCP del Observatorio El Niño · Perú</h1>'
+               '<h1 style="font-size:22px">Servidor MCP del Monitor El Niño · Grupo Evidencia</h1>'
                '<p>Esta dirección no se abre en el navegador: es un servidor <b>MCP</b> para asistentes de IA. '
                'Para usarlo, agrégala como <b>conector personalizado</b> en tu asistente (por ejemplo, en Claude: Configuración → Conectores → Agregar conector personalizado) '
                'con esta URL:</p><p><code style="background:#18293f;padding:4px 8px;border-radius:4px">https://observatorio-nino-peru.onrender.com/mcp</code></p>'
-               '<p>Herramientas disponibles: estado de El Niño esta semana, serie semanal del mar desde 1981, pronóstico por ciudad, lluvia esperada, '
-               'emergencias recientes (GDACS) y comunicados de ENFEN.</p>'
-               '<p><a style="color:#5fd3e4" href="/">Ir al dashboard del observatorio</a></p></body></html>').encode()
+               '<p>Herramientas disponibles: estado de El Niño esta semana, serie semanal del mar desde 1981, perspectiva oficial de ENFEN, '
+               'pronóstico por ciudad con rangos, lluvia esperada, emergencias recientes y comunicados de ENFEN.</p>'
+               '<p><a style="color:#5fd3e4" href="/">Ir al Monitor El Niño</a></p></body></html>').encode()
 
     def send_mcp_405(self):
         # Status stays 405 (correct for MCP clients); the body explains it to people and AI browsers.
@@ -289,31 +426,56 @@ class Handler(SimpleHTTPRequestHandler):
         p = path.path
         if p == '/api/status':
             noaa = dict(cached('noaa', get_noaa, TTL['noaa']))
-            if noaa.get('data'):  # the full history is for MCP; the page only needs the last year
+            if noaa.get('data'):  # the full history is for MCP and /api/historia; pages only need the last year
                 noaa['data'] = {k: v for k, v in noaa['data'].items() if k != 'all'}
             return self.send_json({'sources': {
                 'noaa': noaa,
+                'oficial': get_oficial(),
                 'enfen': cached('enfen', get_enfen, TTL['enfen']),
                 'gdacs': cached('gdacs', get_gdacs, TTL['gdacs']),
                 'indeci': cached('indeci', get_indeci_latest, TTL['indeci']),
                 'news': cached('news', get_news, TTL['news']),
-            }, 'server_time': datetime.now(timezone.utc).isoformat()})
+            }, 'brand': BRAND, 'server_time': datetime.now(timezone.utc).isoformat()})
         if p == '/api/rain-map':
-            return self.send_json(cached('rain', get_rain_map, TTL['rain']))
+            return self.send_json(rain_with_ranges())
         if p == '/api/forecast':
             region = urllib.parse.parse_qs(path.query).get('region', ['lima'])[0]
             if region not in REGIONS:
                 return self.send_json({'error': 'Región no admitida'}, 400)
-            return self.send_json(cached('forecast:' + region, lambda: get_forecast(region), TTL['forecast']))
+            res = dict(cached('forecast:' + region, lambda: get_forecast(region), TTL['forecast']))
+            ens = cached('ens', get_ensemble, TTL['ens'])
+            if res.get('data'):
+                res['data'] = dict(res['data'])
+                res['data']['rangos'] = ((ens.get('data') or {}).get('ciudades') or {}).get(region, {}).get('dias')
+            return self.send_json(res)
+        if p == '/api/historia':
+            return self.send_json(cached('historia', get_historia, TTL['noaa']))
+        if p == '/api/datos/mar.csv':
+            noaa = cached('noaa', get_noaa, TTL['noaa'])
+            if not noaa.get('data'):
+                return self.send_json({'error': 'NOAA no disponible'}, 503)
+            rows = [{'semana': r['date'], 'anomalia_nino12_c': r['nino12'], 'temperatura_nino12_c': r['sst12'],
+                     'anomalia_nino34_c': r['nino34'], 'temperatura_nino34_c': r['sst34']} for r in noaa['data']['all']]
+            return self.send_csv(csv_text(rows, list(rows[0])), 'monitor-el-nino_mar_semanal_noaa.csv')
+        if p == '/api/datos/ciudades.csv':
+            rain = rain_with_ranges()
+            if not rain.get('data'):
+                return self.send_json({'error': 'Pronóstico no disponible'}, 503)
+            rows = [{'ciudad': c['name'], 'zona': ZONES[c['zona']], 'lluvia_3d_mm_modelo': c['rain_3d'],
+                     'lluvia_3d_mm_p10': (c.get('total3') or {}).get('p10'), 'lluvia_3d_mm_p50': (c.get('total3') or {}).get('p50'),
+                     'lluvia_3d_mm_p90': (c.get('total3') or {}).get('p90'),
+                     'fuente': 'Open-Meteo (pronóstico de modelo, no observación)'} for c in rain['data']['cities']]
+            return self.send_csv(csv_text(rows, list(rows[0])), 'monitor-el-nino_lluvia_3dias.csv')
         if p == '/api/health':
             return self.send_json({'status': 'ok', 'version': VERSION, 'server_time': datetime.now(timezone.utc).isoformat()})
         if p == '/mcp':
             # 2026-07-28 removed the GET stream; older clients probing it get 405 too.
             return self.send_mcp_405()
-        if p in ('/app.py', '/render.yaml', '/mcp_server.py'):
+        if p in ('/detalle', '/detalle/'):
+            self.path = '/detalle.html'
+        if p.endswith('.py') or p in ('/render.yaml',):
             return self.send_error(404)
         return super().do_GET()
-
 
     def do_POST(self):
         if urllib.parse.urlsplit(self.path).path != '/mcp':
@@ -335,5 +497,5 @@ class Handler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    print('Observatorio', VERSION, 'en puerto', port, flush=True)
+    print('Monitor El Niño', VERSION, 'en puerto', port, flush=True)
     ThreadingHTTPServer(('0.0.0.0', port), Handler).serve_forever()
