@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Monitor El Niño · Grupo Evidencia</title>
+<title>Resumen · Monitor El Niño | Grupo Evidencia y MNRY</title>
 <meta name="description" content="Qué está pasando con El Niño en el Perú, explicado en simple: el mar, la lluvia en tu ciudad y lo que dicen las autoridades.">
-<meta property="og:title" content="Monitor El Niño · Grupo Evidencia">
+<meta property="og:title" content="Monitor El Niño · Grupo Evidencia y MNRY">
 <meta property="og:description" content="El Niño en el Perú, explicado en simple. Datos públicos de NOAA, ENFEN y Open-Meteo.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/marca.css">
 <style>
 :root{--paper:#faf7f2;--card:#ffffff;--ink:#1b1d22;--sub:#5d6470;--line:#e6e0d6;--accent:#b8322a;--ocean:#1d5f8a;
 --ok:#2f7d4f;--warn:#b7791f;--bad:#b8322a;--soft:#f3eee6}
@@ -17,11 +18,21 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--ocean)}
 .wrap{max-width:680px;margin:0 auto;padding:0 16px}
-header{border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:5}
-.top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px}
-.logo{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:20px;line-height:1.1}
-.logo small{display:block;font:600 10.5px/1.3 Inter,sans-serif;letter-spacing:1.6px;color:var(--sub);text-transform:uppercase}
-.toplink{font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap}
+.mh{--mh-w:680px}
+.area{margin-top:14px}
+h2 .it{width:36px;height:36px}
+.ask{display:flex;align-items:center;gap:8px}
+.ask .ic{width:18px;height:18px}
+.equiv{display:flex;gap:9px;align-items:flex-start;background:var(--m-blue-bg);color:#163f5c;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:15px;line-height:1.45}
+.equiv .ic{width:18px;height:18px;margin-top:2px}
+.know{display:grid;gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:44px 1fr;gap:12px}
+.k .it{width:44px;height:44px;border-radius:12px}
+.k .it .ic{width:24px;height:24px}
+.k .tag{font-size:10.5px;font-weight:800;letter-spacing:1.2px;color:var(--sub);text-transform:uppercase}
+.k .big{font-family:"Source Serif 4",Georgia,serif;font-size:24px;font-weight:700;line-height:1.15;margin:2px 0 6px}
+.k .big.agua{color:var(--m-blue)}.k .big.calor{color:var(--m-red)}
+.k p{margin:0;font-size:15.5px;color:#30343b;line-height:1.5}
 .city{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:18px 0 6px}
 .city label{font-weight:600;font-size:15px}
 select,button{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 12px;cursor:pointer}
@@ -36,7 +47,7 @@ button.ghost{background:transparent;color:var(--ocean);border-color:transparent;
 h1{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:clamp(31px,7.6vw,46px);line-height:1.08;letter-spacing:-.4px;margin:10px 0 12px}
 h1 em{font-style:normal;color:var(--accent)}
 .deck{font-size:19px;line-height:1.55;color:#30343b;margin:0}
-h2{font-family:"Source Serif 4",Georgia,serif;font-size:26px;line-height:1.2;margin:40px 0 12px}
+h2{font-family:"Source Serif 4",Georgia,serif;font-size:26px;line-height:1.2;margin:40px 0 12px;display:flex;align-items:center;gap:12px}
 .q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
 .q .ask{font-size:14px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px}
 .q .ans{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;line-height:1.2;margin:6px 0}
@@ -82,16 +93,17 @@ footer a{color:var(--sub)}
 </style>
 </head>
 <body>
-<header><div class="wrap top">
-  <div class="logo">Monitor El Niño<small>Grupo Evidencia</small></div>
-  <a class="toplink" href="/detalle">Vista detallada →</a>
-</div></header>
+<div class="mh" role="banner"><div class="mh-in">
+  <a class="mh-logo" href="/" aria-label="Monitor El Niño, inicio"><span class="mh-mark"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-mar"/></svg></span><span><span class="mh-name">Monitor El Niño</span><span class="mh-by">Grupo Evidencia · MNRY</span></span></a>
+  <nav class="mh-tabs" aria-label="Secciones"><a class="mh-tab" href="/" aria-current="page"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-dato"/></svg>Resumen</a><a class="mh-tab" href="/datos"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-mapa"/></svg>Datos y mapas</a></nav>
+</div></div>
 
 <main class="wrap">
+  <div class="area"><span class="area-tag resumen"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-dato"/></svg>Resumen</span>Lo esencial, explicado en simple</div>
   <div class="city">
-    <label for="city">Tu ciudad</label>
+    <label for="city" style="display:flex;align-items:center;gap:6px"><svg class="ic agua" aria-hidden="true"><use href="/iconos.svg#i-region"/></svg>Tu ciudad</label>
     <select id="city"></select>
-    <button class="ghost" id="geo" type="button">📍 Usar mi ubicación</button>
+    <button class="ghost" id="geo" type="button">Usar mi ubicación</button>
   </div>
 
   <section class="status skeleton" id="status" aria-live="polite">
@@ -106,35 +118,45 @@ footer a{color:var(--sub)}
     <p class="deck" id="deck"></p>
   </section>
 
-  <h2>Lo que tienes que saber</h2>
-  <article class="q"><div class="ask">¿Está empeorando?</div><div class="ans" id="a1">—</div><p id="a1p"></p>
+  <h2><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-pregunta"/></svg></span><span>Lo que tienes que saber</span></h2>
+  <article class="q"><div class="ask"><svg class="ic calor" aria-hidden="true"><use href="/iconos.svg#i-tendencia"/></svg>¿Está empeorando?</div><div class="ans" id="a1">—</div><p id="a1p"></p>
     <div class="meta" id="a1m"></div></article>
-  <article class="q"><div class="ask" id="a2q">¿Va a llover en tu ciudad?</div><div class="ans" id="a2">—</div><p id="a2p"></p>
+  <article class="q"><div class="ask"><svg class="ic agua" aria-hidden="true"><use href="/iconos.svg#i-gota"/></svg><span id="a2q">¿Va a llover en tu ciudad?</span></div><div class="ans" id="a2">—</div><p id="a2p"></p>
+    <div class="equiv" id="a2e" hidden><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-dato"/></svg><span id="a2et"></span></div>
     <div class="meta" id="a2m"></div>
     <a class="more" href="https://www.senamhi.gob.pe/?p=aviso-meteorologico" target="_blank" rel="noopener">Avisos oficiales de SENAMHI ↗</a></article>
-  <article class="q"><div class="ask">¿Qué dicen las autoridades?</div><div class="ans" id="a3">—</div><p id="a3p"></p>
+  <article class="q"><div class="ask"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-oficial"/></svg>¿Qué dicen las autoridades?</div><div class="ans" id="a3">—</div><p id="a3p"></p>
     <div class="meta" id="a3m"></div>
     <a class="more" id="a3l" href="https://enfen.imarpe.gob.pe/downloads/comunicados/" target="_blank" rel="noopener">Leer el comunicado de ENFEN ↗</a></article>
 
-  <h2 id="cmp-title">¿Será como el 2017?</h2>
+  <h2 id="cmp-title"><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-historia"/></svg></span><span>¿Será como el 2017?</span></h2>
   <p id="cmp-text" style="margin:0"></p>
   <div class="bars" id="bars"></div>
   <div class="meta">Temperatura del mar frente al norte del Perú comparada con lo normal: el punto más alto de cada Niño y el dato de esta semana. Fuente: NOAA. Un mar igual de caliente no significa que vaya a llover igual: eso depende de otros factores que ENFEN evalúa.</div>
 
-  <h2>Lo nuevo esta semana</h2>
+  <h2><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-dato"/></svg></span><span>¿Sabías que…?</span></h2>
+  <div class="know">
+    <div class="k"><span class="it agua"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-gota"/></svg></span><div><span class="tag">Lluvia</span><div class="big agua">1 mm = 1 litro por m²</div><p id="k1"></p></div></div>
+    <div class="k"><span class="it calor"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-hielo"/></svg></span><div><span class="tag">Temperatura</span><div class="big calor">Un solo grado lo cambia todo</div><p id="k2"></p></div></div>
+    <div class="k"><span class="it calor"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-nube"/></svg></span><div><span class="tag">Aire</span><div class="big calor">+1 °C ≈ 7 % más vapor</div><p>Por cada grado más de temperatura, el aire puede guardar cerca de un 7 % más de vapor de agua. Un mar más caliente evapora más y le da más combustible a la lluvia.</p></div></div>
+    <div class="k"><span class="it agua"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-mar"/></svg></span><div><span class="tag">Mar</span><div class="big agua">El aire acondicionado de la costa</div><p>El mar frío de la corriente de Humboldt es la razón por la que la costa peruana es un desierto: enfría el aire y frena la formación de nubes de lluvia. Cuando el mar se calienta, ese freno natural se debilita.</p></div></div>
+  </div>
+  <div class="meta" style="margin-top:8px">Fuentes: escala del índice costero (ICEN) de ENFEN; física básica de la atmósfera (relación de Clausius-Clapeyron).</div>
+
+  <h2><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-nuevo"/></svg></span><span>Lo nuevo esta semana</span></h2>
   <ul class="new" id="new"><li>Consultando…</li></ul>
 
-  <h2>Compártelo</h2>
+  <h2><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-compartir"/></svg></span><span>Compártelo</span></h2>
   <p style="margin:0">Mándale esto a tu familia o a tu grupo de vecinos.</p>
   <div class="share">
     <a class="btn wa" id="wa" href="https://wa.me/" target="_blank" rel="noopener">Compartir por WhatsApp</a>
     <button class="btn img" id="img" type="button">Descargar imagen</button>
   </div>
 
-  <h2>Preguntas frecuentes</h2>
+  <h2><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-pregunta"/></svg></span><span>Preguntas frecuentes</span></h2>
   <div id="faq"></div>
 
-  <h2>¿Qué hago?</h2>
+  <h2><span class="it calor"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-checklist"/></svg></span><span>¿Qué hago?</span></h2>
   <ul class="todo">
     <li>Ten lista una mochila de emergencia: agua, linterna, radio a pilas, botiquín, cargador y tus documentos en una bolsa plástica.</li>
     <li>No cruces ríos ni quebradas cuando lleve agua o barro, ni a pie ni en carro. Una corriente baja puede arrastrarte.</li>
@@ -151,7 +173,7 @@ footer a{color:var(--sub)}
   </div>
   <div class="meta" style="margin-top:8px">Recomendaciones generales de prevención. Ante una emergencia, sigue siempre a las autoridades locales.</div>
 
-  <h2>En las noticias</h2>
+  <h2><span class="it info"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-noticias"/></svg></span><span>En las noticias</span></h2>
   <ul class="news" id="news"><li>Consultando titulares…</li></ul>
 
   <div class="notice"><b>Esto no es un pronóstico oficial.</b> El Monitor El Niño reúne datos públicos y los explica en simple. Para decisiones importantes, sigue a <a href="https://enfen.imarpe.gob.pe/" target="_blank" rel="noopener">ENFEN</a>, <a href="https://www.senamhi.gob.pe/" target="_blank" rel="noopener">SENAMHI</a> e <a href="https://portal.indeci.gob.pe/" target="_blank" rel="noopener">INDECI</a>.</div>
@@ -159,8 +181,8 @@ footer a{color:var(--sub)}
   <footer>
     <div id="updated">Cargando…</div>
     Datos: NOAA (temperatura del mar), ENFEN (comunicados oficiales), Open-Meteo (pronóstico de lluvia con 51 escenarios del modelo europeo ECMWF), GDACS (emergencias).<br>
-    <a href="/detalle">Vista detallada para periodistas y empresas</a> · Datos para IA (MCP): <code>observatorio-nino-peru.onrender.com/mcp</code><br>
-    Una iniciativa de <b>Grupo Evidencia</b> con MNRY · Más información en <a href="https://mantarraya.pe" target="_blank" rel="noopener">mantarraya.pe</a>
+    <a href="/datos">Datos y mapas</a>: mapas, series, regiones y descargas · Datos para IA (MCP): <code>observatorio-nino-peru.onrender.com/mcp</code><br>
+    <span class="credit">Una iniciativa de <b>Grupo Evidencia</b> y <b>MNRY</b></span> · Más información en <a href="https://mantarraya.pe" target="_blank" rel="noopener">mantarraya.pe</a>
   </footer>
 </main>
 
@@ -289,6 +311,11 @@ function renderAnswers(){
     $('a2p').textContent = t && t.p90 > 0.5
       ? `En los próximos tres días podría caer entre ${num(t.p10)} y ${num(t.p90)} mm de lluvia en total, según 51 escenarios de un modelo europeo.`
       : 'En los próximos tres días, casi todos los escenarios del modelo indican poca o ninguna lluvia.';
+    if (t && t.p90 >= 1) {
+      const litres = Math.round(t.p90 * 100), drums = Math.round(litres / 200);
+      $('a2et').innerHTML = `${num(t.p90)} mm son <b>${num(t.p90)} litros por cada metro cuadrado</b>. En un techo de 100 m²: ${litres.toLocaleString('es-PE')} litros` + (drums >= 1 ? `, como ${drums} ${drums === 1 ? 'cilindro' : 'cilindros'} de 200 L.` : '.');
+      $('a2e').hidden = false;
+    } else $('a2e').hidden = true;
     const z = of?.lluvias?.[c.zona];
     $('a2m').textContent = (z ? z.texto + ' ' : '') + 'Es un pronóstico de modelo, no un aviso oficial.';
   }
@@ -366,7 +393,17 @@ function renderNews(){
     : '<li class="meta">No pudimos cargar titulares en este momento.</li>';
 }
 
-function renderAll(){ renderStatus(); renderHero(); renderAnswers(); renderCompare(); renderNew(); renderFaq(); renderNews(); }
+function renderKnow(){
+  const c = cityData(), t = c?.total3, n = S.noaa?.data?.latest;
+  if (c && t && t.p90 >= 2) {
+    const litres = Math.round(t.p90 * 100), drums = Math.round(litres / 200);
+    $('k1').textContent = `Cuando dicen que cayeron 10 mm, significa que cada metro cuadrado recibió 10 litros de agua. Si en ${c.name} cayeran los ${num(t.p90)} mm del escenario más lluvioso de estos tres días, un techo de 100 m² recibiría ${litres.toLocaleString('es-PE')} litros: ${drums} ${drums === 1 ? 'cilindro' : 'cilindros'} de 200 litros.`;
+  } else $('k1').textContent = 'Cuando dicen que cayeron 10 mm, significa que cada metro cuadrado recibió 10 litros de agua. Sobre un techo de 100 m², son 1 000 litros: 5 cilindros de 200 litros.';
+  $('k2').innerHTML = 'Entre 0 °C y 1 °C está la diferencia entre un cubo de hielo y un vaso de agua. El mar también tiene umbrales: ENFEN ya considera condición cálida cuando el mar frente a la costa supera en solo <b>0,4 °C</b> lo normal (promedio de tres meses).' +
+    (n ? ` Esta semana está <b>${deg(n.nino12)} ${n.nino12 >= 0 ? 'arriba' : 'abajo'}</b>.` : '');
+}
+
+function renderAll(){ renderKnow(); renderStatus(); renderHero(); renderAnswers(); renderCompare(); renderNew(); renderFaq(); renderNews(); }
 
 async function load(){
   try {
@@ -389,8 +426,8 @@ $('geo').addEventListener('click', () => {
       const near = list.reduce((a, c) => ((c.lat - p.coords.latitude) ** 2 + (c.lon - p.coords.longitude) ** 2) < ((a.lat - p.coords.latitude) ** 2 + (a.lon - p.coords.longitude) ** 2) ? c : a);
       city = near.id; $('city').value = city; store.set('monitor.city', city); renderAll();
     }
-    $('geo').textContent = '📍 Usar mi ubicación';
-  }, () => { $('geo').textContent = '📍 Usar mi ubicación'; }, {timeout: 10000, maximumAge: 3600000});
+    $('geo').textContent = 'Usar mi ubicación';
+  }, () => { $('geo').textContent = 'Usar mi ubicación'; }, {timeout: 10000, maximumAge: 3600000});
 });
 
 // ---------- shareable image (1080×1350) ----------

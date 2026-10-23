@@ -14,7 +14,7 @@ MODERN = ['2026-07-28']
 LEGACY = ['2025-11-25', '2025-06-18', '2025-03-26']
 META_VER = 'io.modelcontextprotocol/protocolVersion'
 META_SERVER = 'io.modelcontextprotocol/serverInfo'
-SERVER_INFO = {'name': 'monitor-el-nino', 'title': 'Monitor El Niño · Grupo Evidencia', 'version': '2.0'}
+SERVER_INFO = {'name': 'monitor-el-nino', 'title': 'Monitor El Niño · Grupo Evidencia', 'version': '2.1'}
 INSTRUCTIONS = (
     'Datos públicos sobre El Niño y el clima en el Perú, reunidos por el Monitor El Niño (Grupo Evidencia, con MNRY). '
     'Es un monitor de datos, no un servicio de pronóstico. Fuentes: NOAA CPC (anomalías semanales de temperatura del mar, base 1991–2020), '

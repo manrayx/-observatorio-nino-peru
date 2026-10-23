@@ -1,0 +1,30 @@
+/* Monitor El Niño · Grupo Evidencia · MNRY — shared brand layer for both views */
+:root{--m-paper:#faf7f2;--m-ink:#1b1d22;--m-sub:#5d6470;--m-line:#e6e0d6;--m-soft:#f3eee6;
+--m-red:#b8322a;--m-blue:#1d5f8a;--m-ocre:#946413;--m-red-bg:#f8e5e2;--m-blue-bg:#e3edf4;--m-ocre-bg:#f5ead6}
+/* icons: thin line, rounded, one color; three families */
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:middle}
+.agua{color:var(--m-blue)}.calor{color:var(--m-red)}.info{color:var(--m-ocre)}
+.it{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:11px;flex:none}
+.it.agua{background:var(--m-blue-bg)}.it.calor{background:var(--m-red-bg)}.it.info{background:var(--m-ocre-bg)}
+.it .ic{width:21px;height:21px}
+/* header */
+.mh{background:var(--m-paper);border-bottom:1px solid var(--m-line);color:var(--m-ink);position:sticky;top:0;z-index:1100;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.mh-in{max-width:var(--mh-w,1400px);margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px 14px}
+.mh-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--m-ink)}
+.mh-mark{width:34px;height:34px;border-radius:9px;background:var(--m-red);color:#fff;display:grid;place-items:center;flex:none}
+.mh-mark .ic{width:22px;height:22px;stroke-width:2}
+.mh-name{display:block;font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:18px;line-height:1.05;white-space:nowrap}
+.mh-by{display:block;font-size:9.5px;font-weight:700;letter-spacing:1.3px;color:var(--m-sub);text-transform:uppercase;margin-top:3px;white-space:nowrap}
+.mh-tabs{display:flex;background:#efe9df;border-radius:999px;padding:3px;gap:2px}
+.mh-tab{font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;color:var(--m-sub);white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.mh-tab .ic{width:15px;height:15px}
+.mh-tab:hover{color:var(--m-ink)}
+.mh-tab[aria-current=page]{background:var(--m-ink);color:#fff}
+@media(max-width:560px){.mh-in{flex-wrap:wrap}.mh-tabs{width:100%}.mh-tab{flex:1}}
+/* area tag */
+.area{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:600;color:var(--m-ink);font-family:Inter,system-ui,sans-serif}
+.area-tag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;border-radius:999px;padding:4px 10px}
+.area-tag .ic{width:13px;height:13px;stroke-width:2}
+.area-tag.resumen{background:var(--m-red-bg);color:var(--m-red)}
+.area-tag.datos{background:var(--m-blue-bg);color:var(--m-blue)}
+.credit b{color:var(--m-ink)}

@@ -3,29 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vista detallada · Monitor El Niño | Grupo Evidencia</title>
+<title>Datos y mapas · Monitor El Niño | Grupo Evidencia y MNRY</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/marca.css">
 <style>
-:root{color-scheme:dark;--bg:#0b1522;--panel:#142235;--panel2:#18293f;--edge:#25394f;--text:#eef4fb;--sub:#9fb3c8;--accent:#5fd3e4;--warm:#ffb66c}
+:root{color-scheme:light;--bg:#faf7f2;--panel:#ffffff;--panel2:#f3eee6;--edge:#e6e0d6;--text:#1b1d22;--sub:#5d6470;--accent:#1d5f8a;--warm:#b8322a}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--accent)}
-button,select{font:inherit;background:#203954;border:1px solid #4a6682;border-radius:8px;padding:7px 12px;color:#fff;cursor:pointer}
-button:hover,select:hover{background:#2c4d70}
-button[aria-pressed=true]{background:#126476;border-color:#65d4e3}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;background:#0e1b2b;border-bottom:1px solid var(--edge)}
-.brand{color:var(--accent);font-size:10px;letter-spacing:2px;font-weight:800}
-h1{font-size:20px;margin:2px 0 0;line-height:1.2}
+button,select{font:inherit;background:#fff;border:1px solid var(--edge);border-radius:8px;padding:7px 12px;color:var(--text);cursor:pointer;font-weight:600}
+button:hover,select:hover{background:var(--panel2)}
+button[aria-pressed=true]{background:var(--text);border-color:var(--text);color:#fff}
+.subbar{max-width:1400px;margin:0 auto;padding:12px 16px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .top-right{display:flex;align-items:center;gap:10px}
-.dash{padding:12px;display:grid;gap:12px;grid-template-columns:300px minmax(0,1fr) 360px;grid-template-areas:"h h h" "k k k" "l m r" "z z z" "n n n"}
+.ptitle{display:flex;align-items:center;gap:8px}
+.ptitle .ic{width:16px;height:16px}
+.kpi .ptitle{justify-content:center}
+.dash{max-width:1400px;margin:0 auto;padding:12px;display:grid;gap:12px;grid-template-columns:300px minmax(0,1fr) 360px;grid-template-areas:"h h h" "k k k" "l m r" "z z z" "n n n"}
 .hero{grid-area:h;padding:22px 8px 14px;max-width:980px}
-.kicker{color:#ff8a7a;font-size:12.5px;letter-spacing:2.2px;font-weight:800;text-transform:uppercase}
+.kicker{color:var(--warm);font-size:12.5px;letter-spacing:2.2px;font-weight:800;text-transform:uppercase}
 .headline{font-family:"Source Serif 4",Georgia,serif;font-weight:700;font-size:clamp(30px,4.2vw,52px);line-height:1.08;margin:10px 0 12px;letter-spacing:-.5px}
-.headline em{font-style:normal;color:#ff6b5b}
-.deck{font-size:clamp(16px,1.5vw,19px);line-height:1.55;color:#d3dfeb;margin:0;max-width:820px}
-.deck b{color:#fff}
+.headline em{font-style:normal;color:var(--warm)}
+.deck{font-size:clamp(16px,1.5vw,19px);line-height:1.55;color:#30343b;margin:0;max-width:820px}
+.deck b{color:var(--text)}
 .byline{font-size:12px;color:var(--sub);margin-top:12px}
 .hero-skeleton{opacity:.45}
 .kpis{grid-area:k;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -45,19 +47,20 @@ h1{font-size:20px;margin:2px 0 0;line-height:1.2}
 @media(max-width:1000px){.zone{grid-template-columns:minmax(0,1fr)}}
 .left{grid-area:l}.center{grid-area:m}.right{grid-area:r}.newsrow{grid-area:n}
 .col{display:grid;gap:12px;align-content:start;min-width:0}
-.card{background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:14px;min-width:0}
 .ptitle{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--sub);font-weight:700;margin:0 0 8px}
 .kpi{text-align:center;border-top:3px solid var(--edge)}
+.dl a .ic{width:15px;height:15px;margin-right:4px}
 .value{font-size:40px;line-height:1.1;font-weight:800;margin:4px 0 6px;font-variant-numeric:tabular-nums}
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12.5px;font-weight:700;background:#35485e;color:#fff}
-.plain{margin:8px 0 2px;color:#d3dfeb;font-size:13px}
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12.5px;font-weight:700;background:#d9d2c6;color:#fff}
+.plain{margin:8px 0 2px;color:#30343b;font-size:13px}
 .meta{font-size:11.5px;color:var(--sub);margin-top:6px}
-details{margin-top:8px;font-size:13px;color:#cfdce9;text-align:left}
+details{margin-top:8px;font-size:13px;color:#30343b;text-align:left}
 details summary{cursor:pointer;color:var(--accent);font-weight:600;text-align:center}
 details p{margin:8px 0}
 .scale{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;margin-top:6px}
 .scale span:nth-child(odd){font-variant-numeric:tabular-nums;color:var(--sub)}
-.map{height:calc(100vh - 330px);min-height:480px;border-radius:4px;background:#1c3547}
+.map{height:calc(100vh - 330px);min-height:480px;border-radius:8px;background:#e4e1da}
 .legend-bar{height:10px;border-radius:5px;margin-top:6px;background:linear-gradient(90deg,#6b00db 0%,#0094ff 16.7%,#18fce5 25%,#88ff84 33.3%,#bff4a3 41.7%,#cacab7 50%,#fff679 58.3%,#ffb601 66.7%,#ff7100 75%,#f90113 83.3%,#d30085 91.7%,#800000 100%)}
 .legend-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--sub)}
 .legend{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:10px}
@@ -77,7 +80,7 @@ details p{margin:8px 0}
 .picker select{font-weight:700;flex:1}
 .newsgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
 .health .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.health .source{white-space:nowrap}
-.footer{padding:6px 16px 20px;font-size:11.5px;color:var(--sub)}
+.footer{max-width:1400px;margin:0 auto;padding:6px 16px 24px;font-size:12px;color:var(--sub)}
 .leaflet-popup-content{color:#172335}
 .leaflet-container a{color:#067da0}
 .leaflet-control-layers{font-size:12.5px}
@@ -87,10 +90,14 @@ details p{margin:8px 0}
 </style>
 </head>
 <body>
-<header>
-  <div><div class="brand">MONITOR EL NIÑO · GRUPO EVIDENCIA</div><h1>Vista detallada</h1></div>
-  <div class="top-right"><a class="back" href="/">← Vista para todos</a><span class="meta" id="updated" style="margin:0">Cargando fuentes…</span><button id="refresh">Actualizar</button></div>
-</header>
+<div class="mh" role="banner"><div class="mh-in">
+  <a class="mh-logo" href="/" aria-label="Monitor El Niño, inicio"><span class="mh-mark"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-mar"/></svg></span><span><span class="mh-name">Monitor El Niño</span><span class="mh-by">Grupo Evidencia · MNRY</span></span></a>
+  <nav class="mh-tabs" aria-label="Secciones"><a class="mh-tab" href="/"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-dato"/></svg>Resumen</a><a class="mh-tab" href="/datos" aria-current="page"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-mapa"/></svg>Datos y mapas</a></nav>
+</div></div>
+<div class="subbar">
+  <div class="area"><span class="area-tag datos"><svg class="ic" aria-hidden="true"><use href="/iconos.svg#i-mapa"/></svg>Datos y mapas</span>Mapas, series, regiones y descargas</div>
+  <div class="top-right"><span class="meta" id="updated" style="margin:0">Cargando fuentes…</span><button id="refresh">Actualizar</button></div>
+</div>
 <main class="dash">
 <section class="hero hero-skeleton" id="hero" aria-live="polite">
   <div class="kicker" id="kicker">Monitor El Niño</div>
@@ -101,7 +108,7 @@ details p{margin:8px 0}
 
 <section class="kpis">
   <article class="card kpi" id="k12">
-    <div class="ptitle">Mar costa norte · Niño 1+2</div>
+    <div class="ptitle"><svg class="ic calor" aria-hidden="true"><use href="/iconos.svg#i-termometro"/></svg>Mar costa norte · Niño 1+2</div>
     <div class="value" id="n12">—</div>
     <span class="chip" id="n12chip">Consultando…</span>
     <p class="plain" id="n12plain"></p>
@@ -113,7 +120,7 @@ details p{margin:8px 0}
     <div class="meta" id="n12date"></div>
   </article>
   <article class="card kpi" id="k34">
-    <div class="ptitle">Pacífico central · Niño 3.4</div>
+    <div class="ptitle"><svg class="ic agua" aria-hidden="true"><use href="/iconos.svg#i-mar"/></svg>Pacífico central · Niño 3.4</div>
     <div class="value" id="n34">—</div>
     <span class="chip" id="n34chip">Consultando…</span>
     <p class="plain" id="n34plain"></p>
@@ -125,12 +132,12 @@ details p{margin:8px 0}
     <div class="meta" id="n34date"></div>
   </article>
   <article class="card kpi">
-    <div class="ptitle">Emergencias por clima · 60 días</div>
-    <div class="value" id="dcount" style="color:#ff7a6e">—</div>
+    <div class="ptitle"><svg class="ic calor" aria-hidden="true"><use href="/iconos.svg#i-alerta"/></svg>Emergencias por clima · 60 días</div>
+    <div class="value" id="dcount" style="color:var(--warm)">—</div>
     <div class="meta" id="dmeta">Inundaciones, sequías, incendios y ciclones registrados por GDACS en el Perú. No incluye sismos.</div>
   </article>
   <article class="card kpi">
-    <div class="ptitle">Lo oficial · ENFEN</div>
+    <div class="ptitle"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-oficial"/></svg>Lo oficial · ENFEN</div>
     <div class="value" style="font-size:21px;color:var(--warm);margin-top:12px" id="enfen">Consultando…</div>
     <p class="plain" id="enfen-plain">ENFEN es la comisión que declara oficialmente El Niño costero.</p>
     <div class="meta" id="enfen-meta"></div>
@@ -140,7 +147,7 @@ details p{margin:8px 0}
 
 <aside class="col left">
   <article class="card">
-    <div class="ptitle">Últimas emergencias por clima</div>
+    <div class="ptitle"><svg class="ic calor" aria-hidden="true"><use href="/iconos.svg#i-alerta"/></svg>Últimas emergencias por clima</div>
     <div id="dlist">Consultando…</div>
     <details><summary>Sobre esta fuente</summary>
       <p>GDACS es el sistema mundial de alertas de desastres de la ONU y la Comisión Europea. Registra eventos con impacto relevante; no incluye cada emergencia local. Aquí se muestran solo los relacionados con el clima; los sismos y volcanes están en una capa opcional del mapa.</p>
@@ -148,22 +155,22 @@ details p{margin:8px 0}
     </details>
   </article>
   <article class="card dl">
-    <div class="ptitle">Datos abiertos</div>
+    <div class="ptitle"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-datos"/></svg>Datos abiertos</div>
     <a href="/api/datos/mar.csv">Temperatura del mar semanal desde 1981 (CSV) ↓</a>
     <a href="/api/datos/ciudades.csv">Lluvia esperada por ciudad, con rangos (CSV) ↓</a>
     <a href="/oficial.json" target="_blank" rel="noopener">Perspectiva oficial de ENFEN transcrita (JSON) ↗</a>
-    <p class="meta">Conecta los datos a tu asistente de IA (MCP):<br><code>observatorio-nino-peru.onrender.com/mcp</code></p>
+    <p class="meta" style="display:flex;gap:6px"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-ia"/></svg><span>Conecta los datos a tu asistente de IA (MCP):<br><code>observatorio-nino-peru.onrender.com/mcp</code></span></p>
     <p class="meta">Cita sugerida: Monitor El Niño · Grupo Evidencia, con datos de NOAA, ENFEN, Open-Meteo y GDACS.</p>
   </article>
   <article class="card health">
-    <div class="ptitle">Estado de las fuentes</div>
+    <div class="ptitle"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-checklist"/></svg>Estado de las fuentes</div>
     <div id="health">Verificando…</div>
     <p class="meta">Si una fuente no responde se muestra “—”. Eso no significa que no haya lluvias ni emergencias.</p>
   </article>
 </aside>
 
 <section class="card center">
-  <div class="ptitle">Mapa · mar, lluvia que cayó, lluvia esperada y emergencias</div>
+  <div class="ptitle"><svg class="ic agua" aria-hidden="true"><use href="/iconos.svg#i-mapa"/></svg>Mapa · mar, lluvia que cayó, lluvia esperada y emergencias</div>
   <div id="map" class="map" aria-label="Mapa del Perú y el Pacífico oriental"></div>
   <div class="legend">
     <div><div class="meta" style="margin:0">Mar frente a lo normal (satélite, imagen más reciente)</div>
@@ -175,8 +182,8 @@ details p{margin:8px 0}
       <span><span class="dot" style="background:#1f5fff"></span>10–30 mm</span>
       <span><span class="dot" style="background:#8a2be2"></span>&gt;30 mm</span>
       <span>(lluvia esperada, 3 días)</span>
-      <span><span class="dot" style="background:#ff5a4f;border:2px solid #fff"></span>Emergencia por clima</span>
-      <span><span class="dot" style="background:#9aa7b4;border:2px solid #fff"></span>Sismo o volcán (capa opcional)</span>
+      <span><span class="dot" style="background:#e0483d;border:2px solid #fff;box-shadow:0 0 0 1px #c9c2b6"></span>Emergencia por clima</span>
+      <span><span class="dot" style="background:#9aa7b4;border:2px solid #fff;box-shadow:0 0 0 1px #c9c2b6"></span>Sismo o volcán (capa opcional)</span>
     </div>
   </div>
   <div class="meta" id="map-status">Cargando capas…</div>
@@ -185,41 +192,42 @@ details p{margin:8px 0}
 
 <aside class="col right">
   <article class="card">
-    <div class="ptitle">Pronóstico · 7 días</div>
+    <div class="ptitle"><svg class="ic agua" aria-hidden="true"><use href="/iconos.svg#i-gota"/></svg>Pronóstico · 7 días</div>
     <div class="picker"><label for="region">Ciudad</label><select id="region"></select></div>
     <div id="forecast" class="forecast">Consultando pronóstico…</div>
     <div class="meta" id="forecast-caption">Lluvia diaria esperada (mm) y temperatura mínima–máxima.</div>
+    <div class="meta" style="display:flex;gap:6px;align-items:center;color:var(--accent)"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-dato"/></svg>1 mm de lluvia = 1 litro de agua por metro cuadrado.</div>
     <div class="meta"><a href="https://www.senamhi.gob.pe/?p=aviso-meteorologico" target="_blank" rel="noopener">Avisos oficiales SENAMHI ↗</a></div>
   </article>
   <article class="card">
-    <div class="ptitle">¿Se está calentando el mar? · último año</div>
+    <div class="ptitle"><svg class="ic calor" aria-hidden="true"><use href="/iconos.svg#i-tendencia"/></svg>¿Se está calentando el mar? · último año</div>
     <div class="controls"><button id="chart12" aria-pressed="true">Costa norte (1+2)</button><button id="chart34" aria-pressed="false">Pacífico central (3.4)</button></div>
-    <svg id="trend" class="chart" viewBox="0 0 360 205" role="img" aria-label="Gráfico de anomalías semanales"><text x="20" y="90" fill="#a4b7cc">Esperando datos de NOAA…</text></svg>
+    <svg id="trend" class="chart" viewBox="0 0 360 205" role="img" aria-label="Gráfico de anomalías semanales"><text x="20" y="90" fill="#5d6470">Esperando datos de NOAA…</text></svg>
     <div class="meta" id="trend-caption"></div>
   </article>
 </aside>
 
 <section class="zone">
   <article class="card">
-    <div class="ptitle">Por región · próximos días y meses</div>
+    <div class="ptitle"><svg class="ic agua" aria-hidden="true"><use href="/iconos.svg#i-region"/></svg>Por región · próximos días y meses</div>
     <table class="rtable" id="regions"><tr><td>Consultando…</td></tr></table>
     <p class="meta">Semáforo referencial del Monitor (no es una alerta oficial): combina la lluvia esperada por el modelo en los próximos 3 días (escenario central de 51 escenarios ECMWF) con la perspectiva oficial de ENFEN para los próximos meses. En la costa, que es desierto, los umbrales de lluvia son más bajos.</p>
   </article>
   <article class="card">
-    <div class="ptitle">Este año frente a todos los años desde 1981 · costa norte</div>
-    <svg id="hist" class="chart" viewBox="0 0 640 270" role="img" aria-label="Anomalía semanal Niño 1+2 por año"><text x="20" y="130" fill="#a4b7cc">Cargando serie histórica…</text></svg>
+    <div class="ptitle"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-historia"/></svg>Este año frente a todos los años desde 1981 · costa norte</div>
+    <svg id="hist" class="chart" viewBox="0 0 640 270" role="img" aria-label="Anomalía semanal Niño 1+2 por año"><text x="20" y="130" fill="#5d6470">Cargando serie histórica…</text></svg>
     <div class="hist-legend" id="hist-legend"></div>
     <p class="meta">Cada línea gris es un año. Anomalía semanal de temperatura del mar en la región Niño 1+2 (NOAA, base 1991–2020).</p>
   </article>
 </section>
 
 <section class="card newsrow">
-  <div class="ptitle">Noticias recientes</div>
+  <div class="ptitle"><svg class="ic info" aria-hidden="true"><use href="/iconos.svg#i-noticias"/></svg>Noticias recientes</div>
   <div id="news" class="newsgrid">Consultando titulares…</div>
   <div class="meta">Titulares de medios enlazados a su publicación original. No son pronósticos oficiales.</div>
 </section>
 </main>
-<footer class="footer">MONITOR EL NIÑO · GRUPO EVIDENCIA, con MNRY · Monitor independiente de datos públicos; no es un servicio de pronóstico. Datos de NOAA, NASA, ENFEN, Open-Meteo, GDACS e INDECI. No reemplaza los avisos oficiales de SENAMHI, ENFEN o INDECI.<br>¿Usas IA? Conecta los datos del monitor a tu asistente (MCP): <code>https://observatorio-nino-peru.onrender.com/mcp</code><br>Más información en <a href="https://mantarraya.pe" target="_blank" rel="noopener">mantarraya.pe</a></footer>
+<footer class="footer"><b style="color:var(--text)">Monitor El Niño</b> · Una iniciativa de <b style="color:var(--text)">Grupo Evidencia</b> y <b style="color:var(--text)">MNRY</b> · Monitor independiente de datos públicos; no es un servicio de pronóstico. Datos de NOAA, NASA, ENFEN, Open-Meteo, GDACS e INDECI. No reemplaza los avisos oficiales de SENAMHI, ENFEN o INDECI.<br>¿Usas IA? Conecta los datos del monitor a tu asistente (MCP): <code>https://observatorio-nino-peru.onrender.com/mcp</code><br>Más información en <a href="https://mantarraya.pe" target="_blank" rel="noopener">mantarraya.pe</a></footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -261,12 +269,12 @@ function setIndex(key, v, date, fn){
 
 // ---------- Map ----------
 const map = L.map('map', {scrollWheelZoom: false}).setView([-9, -81], window.innerWidth < 600 ? 4 : 5);
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
   maxZoom: 16, attribution: 'Mapa base © Esri, HERE, Garmin, © OpenStreetMap'
 }).addTo(map);
 // City/country names drawn above the sea-temperature layer
 map.createPane('labels'); map.getPane('labels').style.zIndex = 350; map.getPane('labels').style.pointerEvents = 'none';
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
   maxZoom: 16, pane: 'labels'
 }).addTo(map);
 // Satellite SST anomaly: NASA GIBS WMS, no TIME parameter = most recent available day.
@@ -277,7 +285,7 @@ const sstLayer = L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/b
 let sstErrors = 0, sstLoaded = 0;
 sstLayer.on('tileerror', () => { sstErrors++; mapStatus(); });
 sstLayer.on('tileload', () => { sstLoaded++; mapStatus(); });
-const ninoBox = L.rectangle([[-10,-90],[0,-80]], {color:'#ffffff', weight:1.5, dashArray:'6 6', fill:false}).addTo(map);
+const ninoBox = L.rectangle([[-10,-90],[0,-80]], {color:'#1b1d22', weight:1.5, dashArray:'6 6', fill:false}).addTo(map);
 const rainLayer = L.layerGroup().addTo(map);
 // Observed rain: NASA IMERG 24-hour average precipitation rate (most recent day). Off by default.
 const imergLayer = L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', {
@@ -443,7 +451,7 @@ function buildHero(){
 function plot(){
   const rows = dataset.noaa?.data?.series || [];
   const svg = $('trend');
-  if (rows.length < 2){ svg.innerHTML = '<text x="20" y="90" fill="#a4b7cc">Datos de NOAA no disponibles</text>'; return; }
+  if (rows.length < 2){ svg.innerHTML = '<text x="20" y="90" fill="#5d6470">Datos de NOAA no disponibles</text>'; return; }
   const vals = rows.map(x => Number(x[chart]));
   const warm = chart === 'nino12' ? 0.4 : 0.5;
   const min = Math.floor(Math.min(-1, ...vals)), max = Math.ceil(Math.max(1, ...vals));
@@ -452,13 +460,13 @@ function plot(){
   let out = '';
   const step = (max - min) > 6 ? 2 : 1;
   for (let t = min; t <= max; t += step){
-    out += `<line x1="${L0}" x2="${R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#2a405a"/><text x="${L0-6}" y="${Y(t)+4}" fill="#a4b7cc" font-size="12" text-anchor="end">${t>0?'+':''}${t}°</text>`;
+    out += `<line x1="${L0}" x2="${R}" y1="${Y(t)}" y2="${Y(t)}" stroke="#ebe5db"/><text x="${L0-6}" y="${Y(t)+4}" fill="#5d6470" font-size="12" text-anchor="end">${t>0?'+':''}${t}°</text>`;
   }
-  out += `<line x1="${L0}" x2="${R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#cbd5e1" stroke-width="1.5"/><text x="${R}" y="${Y(0)-5}" fill="#cbd5e1" font-size="12" text-anchor="end">normal</text>`;
-  out += `<line x1="${L0}" x2="${R}" y1="${Y(warm)}" y2="${Y(warm)}" stroke="#ffb66c" stroke-dasharray="5 5"/><text x="${L0+4}" y="${Y(warm)-5}" fill="#ffb66c" font-size="12">umbral cálido (+${warm})</text>`;
-  out += `<polyline points="${vals.map((v,i)=>`${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="#60d6e7" stroke-width="2.5" stroke-linejoin="round"/>`;
-  out += vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="2.4" fill="#60d6e7"><title>Semana del ${esc(fmtDate(rows[i].date))}: ${fmt(v)}</title></circle>`).join('');
-  out += `<text x="${L0}" y="198" fill="#a4b7cc" font-size="12">${esc(fmtDate(rows[0].date))}</text><text x="${R}" y="198" fill="#a4b7cc" font-size="12" text-anchor="end">${esc(fmtDate(rows.at(-1).date))}</text>`;
+  out += `<line x1="${L0}" x2="${R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#9aa3ad" stroke-width="1.5"/><text x="${R}" y="${Y(0)-5}" fill="#5d6470" font-size="12" text-anchor="end">normal</text>`;
+  out += `<line x1="${L0}" x2="${R}" y1="${Y(warm)}" y2="${Y(warm)}" stroke="#b7791f" stroke-dasharray="5 5"/><text x="${L0+4}" y="${Y(warm)-5}" fill="#946413" font-size="12">umbral cálido (+${warm})</text>`;
+  out += `<polyline points="${vals.map((v,i)=>`${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="#1d5f8a" stroke-width="2.5" stroke-linejoin="round"/>`;
+  out += vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="2.4" fill="#1d5f8a"><title>Semana del ${esc(fmtDate(rows[i].date))}: ${fmt(v)}</title></circle>`).join('');
+  out += `<text x="${L0}" y="198" fill="#5d6470" font-size="12">${esc(fmtDate(rows[0].date))}</text><text x="${R}" y="198" fill="#5d6470" font-size="12" text-anchor="end">${esc(fmtDate(rows.at(-1).date))}</text>`;
   svg.innerHTML = out;
   const last = vals.at(-1), prev = vals.at(-5);
   const trend = last - prev > 0.2 ? 'subiendo' : prev - last > 0.2 ? 'bajando' : 'estable';
@@ -482,7 +490,7 @@ function renderRegions(){
     const rng = wettest.total3 ? `${num(wettest.total3.p10)}–${num(wettest.total3.p90)} mm` : `${num(wettest.rain_3d)} mm`;
     const out = of?.lluvias?.[z], above = out?.nivel === 'sobre lo normal';
     const ne = evs.filter(e => e.zona === z).length;
-    const [word, color] = lvl >= 3 ? ['Cuidado', '#d61f1f'] : (lvl === 2 || above) ? ['Atento', '#f0a23a'] : ['Tranquilo', '#3fb27f'];
+    const [word, color] = lvl >= 3 ? ['Cuidado', '#b8322a'] : (lvl === 2 || above) ? ['Atento', '#b7791f'] : ['Tranquilo', '#2f7d4f'];
     html += `<tr><td><b>${ZONE_LABEL[z]}</b><small>${cs.map(c => c.name).join(', ')}</small></td>` +
       `<td>${RAIN_WORD[lvl]}<small>${esc(wettest.name)}: ${rng}</small></td>` +
       `<td>${esc(out ? out.nivel.charAt(0).toUpperCase() + out.nivel.slice(1) : '—')}<small>${of ? 'según ENFEN' : ''}</small></td>` +
@@ -501,20 +509,20 @@ async function loadHistory(){
     const vals = keys.flatMap(k => years[k].map(p => p[1]));
     const min = Math.floor(Math.min(-2, ...vals)), max = Math.ceil(Math.max(3, ...vals));
     const L0 = 36, R = 630, T = 10, B = 240, X = d => L0 + (d - 1) / 365 * (R - L0), Y = v => B - (v - min) / (max - min) * (B - T);
-    const HL = {1983:'#f4a261', 1997:'#e9c46a', 1998:'#e9c46a', 2017:'#b892ff', 2023:'#5fd3e4'};
+    const HL = {1983:'#d9822b', 1997:'#a87c12', 1998:'#a87c12', 2017:'#6f52b8', 2023:'#1d8aa0'};
     let out = '';
-    for (let t = min; t <= max; t++) out += `<line x1="${L0}" x2="${R}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? '#cbd5e1' : '#22364d'}" stroke-width="${t === 0 ? 1.2 : 1}"/><text x="${L0 - 6}" y="${Y(t) + 4}" fill="#a4b7cc" font-size="11" text-anchor="end">${t > 0 ? '+' : ''}${t}°</text>`;
-    ['ene','mar','may','jul','sep','nov'].forEach((m, i) => { out += `<text x="${X(1 + i * 61)}" y="258" fill="#a4b7cc" font-size="11">${m}</text>`; });
+    for (let t = min; t <= max; t++) out += `<line x1="${L0}" x2="${R}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? '#9aa3ad' : '#ebe5db'}" stroke-width="${t === 0 ? 1.2 : 1}"/><text x="${L0 - 6}" y="${Y(t) + 4}" fill="#5d6470" font-size="11" text-anchor="end">${t > 0 ? '+' : ''}${t}°</text>`;
+    ['ene','mar','may','jul','sep','nov'].forEach((m, i) => { out += `<text x="${X(1 + i * 61)}" y="258" fill="#5d6470" font-size="11">${m}</text>`; });
     const line = (k, color, w, op) => `<polyline points="${years[k].map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="${w}" stroke-opacity="${op}" stroke-linejoin="round"><title>${k}</title></polyline>`;
-    for (const k of keys) if (!HL[k] && k !== cur) out += line(k, '#7d8fa3', 1, .28);
+    for (const k of keys) if (!HL[k] && k !== cur) out += line(k, '#9aa3ad', 1, .45);
     for (const k of keys) if (HL[k] && k !== cur) out += line(k, HL[k], 1.8, .95);
-    out += line(cur, '#ff5a4f', 3.2, 1);
+    out += line(cur, '#b8322a', 3.2, 1);
     const last = years[cur].at(-1);
-    out += `<circle cx="${X(last[0])}" cy="${Y(last[1])}" r="5" fill="#ff5a4f"/><text x="${X(last[0]) - 10}" y="${Math.max(Y(last[1]) + 4, 22)}" fill="#ff8a7a" font-size="13" font-weight="700" text-anchor="end">${cur}</text>`;
+    out += `<circle cx="${X(last[0])}" cy="${Y(last[1])}" r="5" fill="#b8322a"/><text x="${X(last[0]) - 10}" y="${Math.max(Y(last[1]) + 4, 22)}" fill="#b8322a" font-size="13" font-weight="700" text-anchor="end">${cur}</text>`;
     svg.innerHTML = out;
-    $('hist-legend').innerHTML = [[cur, '#ff5a4f'], ['1982–83', '#f4a261'], ['1997–98', '#e9c46a'], ['2017', '#b892ff'], ['2023', '#5fd3e4'], ['otros años', '#7d8fa3']]
+    $('hist-legend').innerHTML = [[cur, '#b8322a'], ['1982–83', '#d9822b'], ['1997–98', '#a87c12'], ['2017', '#6f52b8'], ['2023', '#1d8aa0'], ['otros años', '#9aa3ad']]
       .map(([t, c]) => `<span><i style="background:${c}"></i>${t}</span>`).join('');
-  } catch(e){ svg.innerHTML = '<text x="20" y="130" fill="#a4b7cc">Serie histórica no disponible por ahora</text>'; }
+  } catch(e){ svg.innerHTML = '<text x="20" y="130" fill="#5d6470">Serie histórica no disponible por ahora</text>'; }
 }
 
 // ---------- Lists ----------

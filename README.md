@@ -1,10 +1,10 @@
-# Monitor El Niño · Grupo Evidencia — versión 2.0
+# Monitor El Niño · Grupo Evidencia — versión 2.1
 
 Monitor independiente de datos públicos sobre El Niño en el Perú. **No es un servicio de pronóstico**: muestra lo que miden NOAA y la NASA, lo que calcula un modelo meteorológico (con su rango de incertidumbre) y lo que dice oficialmente ENFEN.
 
 ## Dos vistas
-- **`/` · Para todos** (celular primero): tu ciudad y su semáforo, titular automático, "¿está empeorando?", "¿va a llover?", "¿qué dicen las autoridades?", comparación con 1983, 1998, 2017 y 2023, lo nuevo de la semana, preguntas frecuentes, qué hacer y números de emergencia, compartir por WhatsApp o como imagen.
-- **`/detalle` · Vista detallada** (periodistas y empresas): mapa con capas (mar, lluvia que cayó, lluvia esperada, emergencias por clima, sismos), semáforo por región, pronóstico de 7 días con rangos, serie de todos los años desde 1981, datos descargables y conexión MCP.
+- **`/` · Resumen** (celular primero): tu ciudad y su semáforo, titular automático, "¿está empeorando?", "¿va a llover?", "¿qué dicen las autoridades?", comparación con 1983, 1998, 2017 y 2023, lo nuevo de la semana, preguntas frecuentes, qué hacer y números de emergencia, compartir por WhatsApp o como imagen.
+- **`/datos` · Datos y mapas** (también `/detalle`): mapa con capas (mar, lluvia que cayó, lluvia esperada, emergencias por clima, sismos), semáforo por región, pronóstico de 7 días con rangos, serie de todos los años desde 1981, datos descargables y conexión MCP.
 
 ## Fuentes
 | Dato | Fuente | Tipo |
@@ -28,7 +28,7 @@ Edita `oficial.json` (número, fecha, enlace, estado de alerta, magnitud, duraci
 Umbrales diarios de referencia — costa (desierto): ligera ≥0,5 mm, moderada ≥2 mm, fuerte ≥10 mm; sierra y selva: ligera ≥1 mm, moderada ≥10 mm, fuerte ≥30 mm.
 
 ## Publicación
-Los archivos `app.py`, `mcp_server.py`, `index.html`, `detalle.html`, `oficial.json`, `README.md` y `render.yaml` van en la **raíz** del repositorio. Con Auto-Deploy activado, Render publica cada cambio. Comprobar en `/api/health` que la versión sea 2.0.
+Los archivos `app.py`, `mcp_server.py`, `index.html`, `detalle.html`, `marca.css`, `iconos.svg`, `oficial.json`, `README.md` y `render.yaml` van en la **raíz** del repositorio. Con Auto-Deploy activado, Render publica cada cambio. Comprobar en `/api/health` que la versión sea 2.1.
 
 ## Endpoints
 `/api/status` · `/api/rain-map` (con rangos) · `/api/forecast?region=lima` (con rangos) · `/api/historia` · `/api/datos/mar.csv` · `/api/datos/ciudades.csv` · `/api/health` · `/mcp`

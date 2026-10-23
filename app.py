@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-VERSION = '2.0'
+VERSION = '2.1'
 BRAND = 'Monitor El Niño · Grupo Evidencia'
 BASE = Path(__file__).resolve().parent
 
@@ -471,7 +471,7 @@ class Handler(SimpleHTTPRequestHandler):
         if p == '/mcp':
             # 2026-07-28 removed the GET stream; older clients probing it get 405 too.
             return self.send_mcp_405()
-        if p in ('/detalle', '/detalle/'):
+        if p in ('/datos', '/datos/', '/detalle', '/detalle/'):
             self.path = '/detalle.html'
         if p.endswith('.py') or p in ('/render.yaml',):
             return self.send_error(404)
